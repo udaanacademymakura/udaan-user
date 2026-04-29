@@ -28,6 +28,7 @@ export interface PurchaseProps {
 }
 
 export interface EsewaPaymentPayload {
+    payment_url: string;
     product_code: string;
     success_url: string;
     failure_url: string;

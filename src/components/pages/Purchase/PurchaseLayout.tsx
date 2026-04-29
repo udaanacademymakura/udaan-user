@@ -17,12 +17,6 @@ import CoursePaymentCard from './CoursePaymentCard';
 import PurchaseGuideLines from './PurchaseGuideLines';
 import PurchasePaymentOption from './PurchasePaymentOption';
 
-// eSewa Configuration
-export const ESEWA_CONFIG = {
-    PAYMENT_URL: import.meta.env.VITE_ESEWA_PAYMENT_URL,
-} as const;
-
-
 function submitEsewaForm(action: string, params: Record<string, any>) {
     const form = document.createElement("form");
     form.method = "POST";
@@ -128,7 +122,7 @@ export default function PurchaseLayout() {
                             signed_field_names: "total_amount,transaction_uuid,product_code",
                             signature: paymentData?.signature,
                         };
-                        submitEsewaForm(ESEWA_CONFIG.PAYMENT_URL, esewaParams);
+                        submitEsewaForm(paymentData.payment_url, esewaParams);
                     }
                 } else if (values.paymentOption === "khalti") {
                     const response = await payViaKhalti({

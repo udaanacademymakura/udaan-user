@@ -16,6 +16,7 @@ export interface EsewaSettingProps {
     mode: PaymentMode;
     is_active: boolean;
     urls?: {
+        payment_url: string;
         payment_check_url: string;
         checkurl_mobile: string;
     };
