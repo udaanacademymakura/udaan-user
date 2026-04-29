@@ -5,8 +5,8 @@ import { useFormik } from 'formik';
 import { ArrowLeft } from 'iconsax-reactjs';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGetCourseByIdQuery, usePurchaseCourseWithEsewaMutation, usePurchaseWithKhaltiMutation } from "../../../services/courseApi";
 import { usePaymentGateways } from "../../../hooks/usePaymentGateways";
+import { useGetCourseByIdQuery, usePurchaseCourseWithEsewaMutation, usePurchaseWithKhaltiMutation } from "../../../services/courseApi";
 import { useGetBundleByOverviewQuery, useGetTestOverviewQuery } from '../../../services/testApi';
 import { showToast } from '../../../slice/toastSlice';
 import { useAppDispatch } from '../../../store/hook';
@@ -37,8 +37,7 @@ function submitEsewaForm(action: string, params: Record<string, any>) {
 export default function PurchaseLayout() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    // For subscription routes: /subscription/:courseId/:subscriptionId/purchase
-    // For other routes: /:type/:id/purchase
+
     const { id, type, courseId, subscriptionId } = useParams();
 
     const isSubscription = !!courseId && !!subscriptionId;
