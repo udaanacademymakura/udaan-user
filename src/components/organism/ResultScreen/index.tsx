@@ -19,7 +19,6 @@ export default function TestResultSummary({
     total_questions = 0,
     test_type,
     full_mark = 0,
-    total_points = 0,
     status,
 
 }: Props) {
@@ -52,7 +51,7 @@ export default function TestResultSummary({
             },
             {
                 label: "Marks Obtained",
-                value: `${total_points}/${full_mark}`,
+                value: `${score}/${full_mark}`,
                 color: theme.palette.success,
             },
             {
@@ -135,7 +134,7 @@ export default function TestResultSummary({
                             color: theme.palette.primary.main,
                         }}
                     >
-                        {total_points}
+                        {score}
                     </Typography>
                     <Typography
                         component="span"

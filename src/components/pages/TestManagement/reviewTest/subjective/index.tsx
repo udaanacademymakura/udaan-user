@@ -212,7 +212,6 @@ export default function ReviewSubjectTestRoot() {
                         testName={data?.data?.test_name}
                         test_type={result?.data?.test_type || "subjective"}
                         score={result?.data?.score || 0}
-                        total_points={result?.data?.total_points || 0}
                         full_mark={result?.data?.full_mark || 0}
                         status={result?.data?.status}
                         percentage={result?.data?.percentage || 0}

@@ -273,10 +273,12 @@ export default function SingleSubjectiveTest() {
     const handleSubmitSubjective = async () => {
         try {
             setIsTimerPaused(true);
+            const timeTaken = (initialTimeRef.current ?? 0) - (timeLeft ?? 0);
             const response = await submitSubjective({
                 courseId: Number(courseId),
                 testId: Number(testId),
-                questionId: Number(currentQuestion?.id)
+                questionId: Number(currentQuestion?.id),
+                time_taken: timeTaken,
             }).unwrap();
             dispatch(
                 showToast({

@@ -105,10 +105,11 @@ export const testApi = createApi({
                 method: "GET",
             })
         }),
-        submitSubjectiveFinal: builder.mutation<GlobalResponse, { courseId: number; testId: number, questionId: number }>({
-            query: ({ courseId, testId }) => ({
+        submitSubjectiveFinal: builder.mutation<GlobalResponse, { courseId: number; testId: number, questionId: number, time_taken?: number }>({
+            query: ({ courseId, testId, time_taken }) => ({
                 url: `/test/${testId}/subjective/submit${courseId ? `?course_id=${courseId}` : ''}`,
                 method: "POST",
+                body: { time_taken },
             }),
             invalidatesTags: () => [{ id: "LIST", type: "Test" }]
         }),
