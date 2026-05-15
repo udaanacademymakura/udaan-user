@@ -64,7 +64,7 @@ export default function SingleSubjectiveTest() {
 
     const [uploadMedia, { isLoading: uploading }] = useUploadSubjectiveAnswersMutation();
     const [deleteMedia, { isLoading: deleting }] = useDeleteSubjectiveAnswersMutation();
-    const [submitSubjective] = useSubmitSubjectiveFinalMutation();
+    const [submitSubjective, { isLoading: submitting }] = useSubmitSubjectiveFinalMutation();
 
     useEffect(() => {
         const savedData = localStorage.getItem(storageKey);
@@ -270,7 +270,7 @@ export default function SingleSubjectiveTest() {
         }
     };
 
-    const handleSubmitSubjective = async () => {
+    const handleSubmitSubjective = async (showSummary = false) => {
         try {
             setIsTimerPaused(true);
             const timeTaken = (initialTimeRef.current ?? 0) - (timeLeft ?? 0);
@@ -287,7 +287,11 @@ export default function SingleSubjectiveTest() {
                 })
             );
             localStorage.removeItem(storageKey);
-            navigate(PATH.TEST.ROOT);
+            if (showSummary) {
+                setSubmitModal({ open: true, type: "submit" });
+            } else {
+                navigate(PATH.TEST.ROOT);
+            }
         } catch (e: any) {
             dispatch(
                 showToast({
@@ -296,6 +300,13 @@ export default function SingleSubjectiveTest() {
                 })
             );
         }
+    };
+
+    // The summary dialog only opens once the test is already submitted, so
+    // this just dismisses it and routes the user onward.
+    const handleViewSummary = () => {
+        setSubmitModal({ open: false, type: "submit" });
+        navigate(PATH.TEST.ROOT);
     };
 
     const formatTime = (ms: number | undefined) => {
@@ -438,26 +449,20 @@ export default function SingleSubjectiveTest() {
                     variant="contained"
                     onClick={
                         isLastQuestion
-                            ? () => setSubmitModal((_prev) => ({ open: true, type: "submit" }))
+                            ? () => handleSubmitSubjective(true)
                             : handleNextQuestion
                     }
-                    disabled={uploading || deleting}
+                    disabled={uploading || deleting || submitting}
                 >
-                    {isLastQuestion ? "Submit" : "Next"}
+                    {isLastQuestion ? (submitting ? "Submitting..." : "Submit") : "Next"}
                 </Button>
             </div>
             <TestSubmissionDialog
                 open={submitModal.open}
                 handleClose={handleCloseSubmitModal}
-                onSubmit={() => {
-                    if (submitModal.type === "timer") {
-                        handleSubmitSubjective();
-                    } else {
-                        handleSubmitSubjective();
-                    }
-                }}
+                onSubmit={handleViewSummary}
                 type={submitModal.type as SubmissionType}
-                loading={uploading || deleting}
+                loading={submitting}
             />
             <TestCancelDialog
                 open={modal.open}
