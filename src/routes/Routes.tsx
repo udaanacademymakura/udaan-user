@@ -183,6 +183,7 @@ const router = createBrowserRouter([
             children: [
               { path: PATH.COURSE_MANAGEMENT.COURSES.ROOT, element: <AllCourses /> },
               { path: PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(), element: <SingleCourse /> },
+              { path: PATH.MY_COURSE.VIEW_COURSE.ROOT(), element: <SingleCourse /> },
               { path: PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.ROOT({}), element: <SingleTestRoot /> },
               { path: PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.SUBJECTIVE_TEST.ROOT({}), element: <SingleSubjectiveTest /> },
               { path: PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.REVIEW_TEST.ROOT({}), element: <ReviewTestRoot /> },

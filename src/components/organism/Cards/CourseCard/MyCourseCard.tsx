@@ -25,7 +25,7 @@ export default function MyCourseCard({ course }: { course: CourseProps }) {
     const expiryLabel = course?.ends_at?.split(",")?.[0] ?? "";
 
     const handleContinue = () =>
-        navigate(PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(Number(course.id)));
+        navigate(PATH.MY_COURSE.VIEW_COURSE.ROOT(Number(course.id)));
     const handlePurchase = () =>
         navigate(PATH.COURSE_MANAGEMENT.COURSES.PURCHASE.ROOT(Number(course.id), "course"));
 

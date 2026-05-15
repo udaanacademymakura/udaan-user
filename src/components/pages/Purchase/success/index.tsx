@@ -273,7 +273,7 @@ export default function PurchaseSuccess() {
                         fullWidth
                         variant="contained"
                         size="large"
-                        onClick={() => navigate(type === "course" ? PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(Number(id)) : type === "test" ? PATH.TEST.ROOT : PATH.TEST.EXPLORE_TEST.BUNDLE_TEST.VIEW_BUNDLE.ROOT(Number(id)))}
+                        onClick={() => navigate(type === "course" ? PATH.MY_COURSE.VIEW_COURSE.ROOT(Number(id)) : type === "test" ? PATH.TEST.ROOT : PATH.TEST.EXPLORE_TEST.BUNDLE_TEST.VIEW_BUNDLE.ROOT(Number(id)))}
                     >
                         Start Learning
                     </Button>

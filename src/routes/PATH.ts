@@ -170,7 +170,10 @@ export const PATH = {
         ROOT: "/notes"
     },
     MY_COURSE: {
-        ROOT: "/my-course"
+        ROOT: "/my-course",
+        VIEW_COURSE: {
+            ROOT: (id?: number) => (id ? `/my-course/${id}` : "/my-course/:id"),
+        },
     },
     GORKHAPATRA: {
         ROOT: "/gorkhapatra",
