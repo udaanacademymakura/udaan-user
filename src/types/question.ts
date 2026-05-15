@@ -104,12 +104,17 @@ export interface McqSubmissionData {
     correct: number;
     incorrect: number;
     skipped: number;
-    time_taken: string;
+    time_taken: string | null;
     attempted: number;
     total_questions: number;
     percentage: number;
-    test_type: "mcq" | string;
+    test_type: "mcq" | "subjective" | string;
     test_name: string;
+    /** Subjective result fields */
+    total_points?: number;
+    full_mark?: number;
+    pass_mark?: number;
+    status?: "pass" | "fail" | string;
 }
 
 export interface McqSubmissionResponse extends GlobalResponse {

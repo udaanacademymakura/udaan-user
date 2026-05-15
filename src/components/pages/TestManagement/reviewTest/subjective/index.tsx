@@ -210,9 +210,12 @@ export default function ReviewSubjectTestRoot() {
                 <div className="col-span-5 2xl:col-span-4">
                     <TestResultSummary
                         testName={data?.data?.test_name}
-                        correct={result?.data?.correct || 0}
+                        test_type={result?.data?.test_type || "subjective"}
+                        score={result?.data?.score || 0}
+                        total_points={result?.data?.total_points || 0}
+                        full_mark={result?.data?.full_mark || 0}
+                        status={result?.data?.status}
                         percentage={result?.data?.percentage || 0}
-                        incorrect={result?.data?.incorrect || 0}
                         time_taken={result?.data?.time_taken || ""}
                         total_questions={result?.data?.total_questions || 0}
                         attempted={result?.data?.attempted || 0}

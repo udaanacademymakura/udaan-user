@@ -17,9 +17,14 @@ export default function TestResultSummary({
     time_taken = "",
     attempted = 0,
     total_questions = 0,
+    test_type,
+    full_mark = 0,
+    total_points = 0,
+    status,
 
 }: Props) {
     const theme = useTheme();
+    const isSubjective = test_type === "subjective";
     const getScoreMessage = (score: number) => {
         if (Number(score) < 40) {
             return "Don't be discouraged — every expert was once a beginner. Review your mistakes and try again!";
@@ -33,31 +38,57 @@ export default function TestResultSummary({
         return "Congratulations on your excellent score! Your dedication and hard work are truly paying off.";
     };
 
-    const scoreMessage = getScoreMessage(Number(score));
+    const scoreMessage = getScoreMessage(isSubjective ? Number(percentage) : Number(score));
 
-    const stats = [
-        {
-            label: "Correct answers",
-            value: `${correct}/${total_questions}`,
-            color: theme.palette.success,
-        },
-        {
-            label: "Incorrect answers",
-            value:
-                `${incorrect}/${total_questions}`,
-            color: theme.palette.error,
-        },
-        {
-            label: "Total Time Taken",
-            value: time_taken || "",
-            color: theme.palette.warning,
-        },
-        {
-            label: "Questions Attempted",
-            value: `${attempted}/${total_questions}`,
-            color: theme.palette.primary,
-        },
-    ];
+    const statusLabel = status ? `${status.charAt(0).toUpperCase()}${status.slice(1)}` : "";
+    const statusColor = status === "pass" ? theme.palette.success : theme.palette.error;
+
+    const stats = isSubjective
+        ? [
+            {
+                label: "Attempted",
+                value: `${attempted}/${total_questions}`,
+                color: theme.palette.primary,
+            },
+            {
+                label: "Marks Obtained",
+                value: `${total_points}/${full_mark}`,
+                color: theme.palette.success,
+            },
+            {
+                label: "Status",
+                value: statusLabel,
+                color: statusColor,
+            },
+            {
+                label: "Time Taken",
+                value: time_taken || "",
+                color: theme.palette.warning,
+            },
+        ]
+        : [
+            {
+                label: "Correct answers",
+                value: `${correct}/${total_questions}`,
+                color: theme.palette.success,
+            },
+            {
+                label: "Incorrect answers",
+                value:
+                    `${incorrect}/${total_questions}`,
+                color: theme.palette.error,
+            },
+            {
+                label: "Total Time Taken",
+                value: time_taken || "",
+                color: theme.palette.warning,
+            },
+            {
+                label: "Questions Attempted",
+                value: `${attempted}/${total_questions}`,
+                color: theme.palette.primary,
+            },
+        ];
 
     const chartOptions: any = {
         chart: {
@@ -92,15 +123,41 @@ export default function TestResultSummary({
             className="lg:py-14 px-8 rounded-lg"
             sx={{ border: `1px solid ${theme.palette.separator.dark}` }}
         >
-            {/* Chart */}
-            <div className="w-40 mb-2 mx-auto">
-                <ReactApexChart
-                    type="radialBar"
-                    series={[percentage]}
-                    options={chartOptions}
-                    height={180}
-                />
-            </div>
+            {/* Points / Full mark (subjective) or Chart (mcq) */}
+            {isSubjective ? (
+                <div className="flex items-baseline justify-center gap-1 mb-2 mt-2">
+                    <Typography
+                        component="span"
+                        sx={{
+                            fontSize: '4rem',
+                            fontWeight: 800,
+                            lineHeight: 1.1,
+                            color: theme.palette.primary.main,
+                        }}
+                    >
+                        {total_points}
+                    </Typography>
+                    <Typography
+                        component="span"
+                        sx={{
+                            fontSize: '1.75rem',
+                            fontWeight: 600,
+                            color: theme.palette.text.middle,
+                        }}
+                    >
+                        / {full_mark}
+                    </Typography>
+                </div>
+            ) : (
+                <div className="w-40 mb-2 mx-auto">
+                    <ReactApexChart
+                        type="radialBar"
+                        series={[percentage]}
+                        options={chartOptions}
+                        height={180}
+                    />
+                </div>
+            )}
 
             {/* Title & Message */}
             <div className="text-center">
