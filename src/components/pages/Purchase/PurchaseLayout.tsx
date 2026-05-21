@@ -104,7 +104,6 @@ export default function PurchaseLayout() {
                         moduleType: isSubscription ? "course" : type as PurchaseModuleTypes,
                         subscriptionId: isSubscription ? selectedSubscriptionId : undefined,
                     }).unwrap();
-                    debugger;
                     if (coursePurchaseData) {
                         const paymentData = coursePurchaseData?.data;
 
