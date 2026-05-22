@@ -1,6 +1,6 @@
-import { Box, Button, Divider, Typography } from "@mui/material";
-import { ArrowLeft } from "iconsax-reactjs";
-import { useEffect, useRef, useState } from "react";
+import { Box, Button, Divider, Typography, useTheme } from "@mui/material";
+import { ArrowLeft, TickCircle } from "iconsax-reactjs";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { PATH } from "../../../../routes/PATH";
@@ -17,7 +17,9 @@ import type {
     QuestionProps,
 } from "../../../../types/question";
 
+import { getApiErrorMessage } from "../../../../utils/apiError";
 import { renderHtml } from "../../../../utils/renderHtml";
+import useTestTimer, { type TimerWarning } from "../../../../utils/useTestTimer";
 
 import TestCancelDialog from "../../../organism/Dialog/TestCancelDialog";
 import TestResultDialog from "../../../organism/Dialog/TestResultDialog";
@@ -27,13 +29,13 @@ import TestSubmissionDialog, {
 
 import WaterMark from "../../../../Watermark";
 import { EmptyList } from "../../../molecules/EmptyList";
+import TablePagination from "../../../molecules/Pagination";
 import TabController from "../../../molecules/TabController";
 import TestSample from "../reviewTest/TestSample";
 import QuestionListView from "./QuestionListView";
 import QuestionView from "./QuestionView";
 import TwoMinAudio from "/audios/mcq-2-min-warning.mp3";
 import FiveMinAudio from "/audios/mcq-5-min-warning.mp3";
-/* ---------------- Skeletons ---------------- */
 
 const HeaderSkeleton = () => (
     <div className="animate-pulse space-y-3">
@@ -67,6 +69,7 @@ const QuestionSkeleton = () => (
 export default function SingleTestRoot() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const theme = useTheme();
     const { courseId, testId } = useParams<{
         courseId: string;
         testId: string;
@@ -78,14 +81,9 @@ export default function SingleTestRoot() {
     const STORAGE_KEY = `mcq_test_progress_${courseId}_${testId}`;
     const RESULT_KEY = `mcq_test_result_${courseId}_${testId}`;
 
-
     const [attendedQuestion, setAttendedQuestion] = useState<Answers[]>([]);
-    const [currentQuestion, setCurrentQuestion] =
-        useState<QuestionProps | null>(null);
+    const [currentQuestion, setCurrentQuestion] = useState<QuestionProps | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
-
-    const [timeLeft, setTimeLeft] = useState<number | undefined>();
-    const [timerPaused, setTimerPaused] = useState(false);
 
     const [cancelModal, setCancelModal] = useState(false);
     const [submitModal, setSubmitModal] = useState<{
@@ -95,151 +93,93 @@ export default function SingleTestRoot() {
 
     const [result, setResult] = useState<McqSubmissionData | null>(null);
     const [resultOpen, setResultOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("questions")
+    const [activeTab, setActiveTab] = useState("questions");
 
-    const initialTimeRef = useRef<number | null>(null);
-    const fiveMinPlayedRef = useRef(false);
-    const twoMinPlayedRef = useRef(false);
+    const submittedRef = useRef(false);
 
     const fiveMinAudioRef = useRef<HTMLAudioElement | null>(null);
     const twoMinAudioRef = useRef<HTMLAudioElement | null>(null);
 
-
     useEffect(() => {
         fiveMinAudioRef.current = new Audio(FiveMinAudio);
         twoMinAudioRef.current = new Audio(TwoMinAudio);
+        return () => {
+            fiveMinAudioRef.current?.pause();
+            twoMinAudioRef.current?.pause();
+            fiveMinAudioRef.current = null;
+            twoMinAudioRef.current = null;
+        };
     }, []);
 
-
-    const {
-        data,
-        isLoading,
-        isFetching,
-    } = useGetTestByIdQuery(
+    const { data, isLoading, isFetching } = useGetTestByIdQuery(
         { courseId: numericCourseId, testId: numericTestId },
         { skip: !numericTestId }
     );
 
-    const [submitMcq, { isLoading: submitting }] =
-        useSubmitMcqMutation();
+    const [submitMcq, { isLoading: submitting }] = useSubmitMcqMutation();
 
+    const isMCQ = data?.overview?.test_type === "mcq";
+    const questions = data?.data ?? [];
 
+    const warnings = useMemo<TimerWarning[]>(() => [
+        { atMs: 5 * 60 * 1000, play: () => { void fiveMinAudioRef.current?.play().catch(() => undefined); } },
+        { atMs: 2 * 60 * 1000, play: () => { void twoMinAudioRef.current?.play().catch(() => undefined); } },
+    ], []);
+
+    // Latest-callback ref so the hook's onExpire always sees the freshest
+    // closure (which captures the freshest `attendedQuestion`).
+    const onExpireRef = useRef<() => void>(() => undefined);
+
+    const { timeLeft, startedAt, deadline, status, wasAlreadyClosed } = useTestTimer({
+        durationMs: isMCQ ? data?.overview?.time : undefined,
+        endDatetime: data?.overview?.end_datetime,
+        storageKey: STORAGE_KEY,
+        onExpire: () => onExpireRef.current(),
+        warnings,
+    });
+
+    const isExpired = status === "expired";
+
+    // Hydrate progress (answers + index) from localStorage. Timer state is
+    // owned by useTestTimer under a separate suffixed key.
     useEffect(() => {
-        if (!data || data.overview?.test_type !== "mcq") return;
-
-        const endTime = data.overview.end_datetime ? new Date(data.overview.end_datetime).getTime() : null;
-        const currentTime = Date.now();
-        const timeRemainingFromEnd = endTime ? Math.max(endTime - currentTime, 0) : null;
-
-        if (timeRemainingFromEnd !== null && timeRemainingFromEnd <= 0) {
-            // dispatch(
-            //     showToast({
-            //         message: "This test has already ended.",
-            //         severity: "error",
-            //     })
-            // );
-            localStorage.removeItem(STORAGE_KEY);
-            setCurrentQuestion(data.data[0]);
-            setTimeLeft(0);
-            // navigate(PATH.TEST.ROOT);
-            return;
-        }
-
-        const actualTimeLeft = timeRemainingFromEnd !== null
-            ? Math.min(data.overview.time, timeRemainingFromEnd)
-            : data.overview.time;
-
-        initialTimeRef.current = actualTimeLeft;
-
+        if (!isMCQ || !data) return;
         const saved = localStorage.getItem(STORAGE_KEY);
-
-        if (!saved) {
-            setCurrentQuestion(data.data[0]);
-            setTimeLeft(actualTimeLeft);
-            return;
-        }
-
-        const parsed = JSON.parse(saved);
-        const index = parsed.currentQuestionIndex ?? 0;
-
-        setAttendedQuestion(parsed.attendedQuestion || []);
-        setCurrentIndex(index);
-        setCurrentQuestion(data.data[index]);
-
-        const diff = Date.now() - parsed.lastUpdated;
-        setTimeLeft(Math.max(parsed.timeLeft - diff, 0));
-    }, [data, STORAGE_KEY, dispatch, navigate]);
-
-
-    useEffect(() => {
-        if (timeLeft === undefined || timerPaused) return;
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({
-                attendedQuestion,
-                currentQuestionIndex: currentIndex,
-                timeLeft,
-                lastUpdated: Date.now(),
-            })
-        );
-    }, [attendedQuestion, currentIndex, timeLeft, timerPaused, STORAGE_KEY]);
-
-
-    useEffect(() => {
-        if (timeLeft === undefined || timerPaused || timeLeft <= 0) return;
-
-        const id = setInterval(
-            () => setTimeLeft(t => Math.max((t ?? 0) - 1000, 0)),
-            1000
-        );
-
-        return () => clearInterval(id);
-    }, [timeLeft, timerPaused]);
-
-
-    useEffect(() => {
-        if (timeLeft === undefined || timerPaused) return;
-
-        const fiveMinutesInMs = 5 * 60 * 1000;
-        const twoMinutesInMs = 2 * 60 * 1000;
-
-        if (timeLeft <= fiveMinutesInMs && timeLeft > fiveMinutesInMs - 1000 && !fiveMinPlayedRef.current) {
-            fiveMinPlayedRef.current = true;
-            if (fiveMinAudioRef.current) {
-                fiveMinAudioRef.current.play().catch((error) => {
-                    console.error("Failed to play 5-minute warning audio:", error);
-                });
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                const idx = parsed.currentQuestionIndex ?? 0;
+                const safeIdx = data.data[idx] ? idx : 0;
+                setAttendedQuestion(Array.isArray(parsed.attendedQuestion) ? parsed.attendedQuestion : []);
+                setCurrentIndex(safeIdx);
+                setCurrentQuestion(data.data[safeIdx] ?? null);
+                return;
+            } catch {
+                // fall through to fresh start
             }
         }
+        setCurrentQuestion(data.data[0] ?? null);
+    }, [data, isMCQ, STORAGE_KEY]);
 
-        if (timeLeft <= twoMinutesInMs && timeLeft > twoMinutesInMs - 1000 && !twoMinPlayedRef.current) {
-            twoMinPlayedRef.current = true;
-            if (twoMinAudioRef.current) {
-                twoMinAudioRef.current.play().catch((error) => {
-                    console.error("Failed to play 2-minute warning audio:", error);
-                });
-            }
-        }
-    }, [timeLeft, timerPaused]);
-
-
+    // Persist progress (only when there's something to save — avoids the
+    // first-render clobber).
     useEffect(() => {
-        if (timeLeft === 0 && !timerPaused) {
-            setTimerPaused(true);
-            if (!isExpired) {
-                handleSubmit("timer");
-            }
+        if (!isMCQ) return;
+        if (attendedQuestion.length === 0 && currentIndex === 0) return;
+        try {
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({ attendedQuestion, currentQuestionIndex: currentIndex }),
+            );
+        } catch {
+            // ignore
         }
-    }, [timeLeft, timerPaused]);
+    }, [attendedQuestion, currentIndex, isMCQ, STORAGE_KEY]);
 
 
     const handleAnswer = (value: Answers) => {
-        setAttendedQuestion(prev => {
-            const index = prev.findIndex(
-                v => v.question_id === value.question_id
-            );
-
+        setAttendedQuestion((prev) => {
+            const index = prev.findIndex((v) => v.question_id === value.question_id);
             if (index !== -1) {
                 const copy = [...prev];
                 copy[index] = value;
@@ -249,60 +189,72 @@ export default function SingleTestRoot() {
         });
     };
 
-    const handleSubmit = async (type: SubmissionType) => {
-        console.log(type);
-        if (!data) return;
-
+    const handleSubmit = useCallback(async (type: SubmissionType = "submit") => {
+        if (!data || submittedRef.current) return;
+        submittedRef.current = true;
         try {
-            setTimerPaused(true);
-
-            const timeTaken =
-                (initialTimeRef.current ?? 0) - (timeLeft ?? 0);
+            const submittedAt = Date.now();
+            const cappedAt = deadline !== undefined ? Math.min(submittedAt, deadline) : submittedAt;
+            const timeTaken = startedAt !== undefined ? Math.max(cappedAt - startedAt, 0) : 0;
 
             const res = await submitMcq({
                 courseId: numericCourseId,
                 testId: numericTestId,
-                body: {
-                    answers: attendedQuestion,
-                    time_taken: timeTaken,
-                },
+                body: { answers: attendedQuestion, time_taken: timeTaken },
             }).unwrap();
 
-            localStorage.removeItem(STORAGE_KEY);
-            localStorage.setItem(RESULT_KEY, JSON.stringify(res.data));
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(`${STORAGE_KEY}__timer`);
+                localStorage.setItem(RESULT_KEY, JSON.stringify(res.data));
+            } catch {
+                // ignore
+            }
 
             setResult(res.data);
-            setResultOpen(true);
+            // Submission is complete — show the post-submit confirmation
+            // dialog ("Already submitted… view summary"). The result dialog
+            // opens only after the student clicks View Summary.
+            setSubmitModal({ open: true, type });
 
-            dispatch(
-                showToast({
-                    message: res.message || "Test submitted successfully",
-                    severity: "success",
-                })
-            );
-        } catch {
-            dispatch(
-                showToast({
-                    message: "Unable to submit test",
-                    severity: "error",
-                })
-            );
+            dispatch(showToast({
+                message: res.message || "Test submitted successfully",
+                severity: "success",
+            }));
+        } catch (e) {
+            // Allow retry: clear the in-flight guard so manual / timer-driven
+            // resubmits aren't permanently locked out by a transient failure.
+            submittedRef.current = false;
+            dispatch(showToast({
+                message: getApiErrorMessage(e, "Unable to submit test"),
+                severity: "error",
+            }));
         }
+    }, [data, attendedQuestion, startedAt, deadline, numericCourseId, numericTestId, STORAGE_KEY, RESULT_KEY, submitMcq, dispatch]);
+
+    // Wire the timer's expiry to the latest handleSubmit closure.
+    useEffect(() => {
+        onExpireRef.current = () => {
+            void handleSubmit("timer");
+        };
+    }, [handleSubmit]);
+
+    const handleViewSummary = () => {
+        setSubmitModal({ open: false, type: "submit" });
+        setResultOpen(true);
     };
 
-
     const isReady = !!data && !isLoading && !isFetching;
-    const isMCQ = data?.overview?.test_type === "mcq";
-    const questions = data?.data ?? [];
-    const endTime = data?.overview?.end_datetime
-        ? new Date(data.overview.end_datetime).getTime()
-        : null;
-    const isExpired = timeLeft === 0 || (endTime !== null && Date.now() >= endTime);
     const isFirst = currentIndex === 0;
     const isLast = currentIndex === questions.length - 1;
 
-
-    console.log("expired", isExpired)
+    // Client-side pagination for the read-only branches (ended-MCQ and
+    // subjective viewer). Both render at most one of these branches at a
+    // time, so sharing the state is fine.
+    const [reviewQp, setReviewQp] = useState({ pageIndex: 1, pageSize: 6 });
+    const totalReviewPages = Math.max(Math.ceil(questions.length / reviewQp.pageSize), 0);
+    const pagedQuestionStart = (reviewQp.pageIndex - 1) * reviewQp.pageSize;
+    const pagedQuestions = questions.slice(pagedQuestionStart, pagedQuestionStart + reviewQp.pageSize);
 
     if (!isReady) {
         return (
@@ -313,6 +265,67 @@ export default function SingleTestRoot() {
                     <SidebarSkeleton />
                     <QuestionSkeleton />
                 </div>
+            </div>
+        );
+    }
+
+    if (isMCQ && wasAlreadyClosed) {
+        return (
+            <div className="single__test__wrapper test__review__root h-full overflow-auto">
+                <WaterMark />
+                <Button startIcon={<ArrowLeft />} onClick={() => navigate(-1)}>
+                    Back to Test
+                </Button>
+                <Divider className="my-4!" />
+                <Typography variant="h5" className="mb-2!">{data?.overview?.name}</Typography>
+                <Typography variant="body2" color="text.middle" className="mb-4!">
+                    This test has already ended.
+                </Typography>
+                <Divider className="my-4!" />
+                {!questions.length ? (
+                    <EmptyList title="No Questions Found" description="No Questions added to this test." />
+                ) : (
+                    <>
+                        <Box className="flex flex-col gap-6">
+                            {pagedQuestions.map((q, index) => (
+                                <div className="question__box" key={q.id ?? pagedQuestionStart + index}>
+                                    <Typography className="mb-3!" variant="h6">
+                                        {pagedQuestionStart + index + 1}. {renderHtml(q.question)}
+                                    </Typography>
+                                    <div className="flex flex-col gap-3 md:grid md:grid-cols-2">
+                                        {q.options.map((opt) => {
+                                            const correct = opt.is_correct;
+                                            return (
+                                                <Box
+                                                    key={opt.id ?? opt.option}
+                                                    className="rounded-lg p-3 flex items-center gap-2"
+                                                    sx={{
+                                                        border: `1px solid ${correct ? theme.palette.success.main : theme.palette.separator.dark}`,
+                                                        backgroundColor: correct ? theme.palette.success.light : "transparent",
+                                                    }}
+                                                >
+                                                    {correct && (
+                                                        <TickCircle
+                                                            variant="Bold"
+                                                            color={theme.palette.success.main}
+                                                        />
+                                                    )}
+                                                    <Typography variant="body2">{renderHtml(opt.option)}</Typography>
+                                                </Box>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </Box>
+                        <TablePagination
+                            qp={reviewQp}
+                            setQp={setReviewQp}
+                            totalPages={totalReviewPages}
+                            totalRecords={questions.length}
+                        />
+                    </>
+                )}
             </div>
         );
     }
@@ -334,21 +347,31 @@ export default function SingleTestRoot() {
                         setActiveTab={setActiveTab}
                         options={[
                             { label: "Questions", value: "questions" },
-                            { label: "Feedback", value: "feedback" }
+                            { label: "Feedback", value: "feedback" },
                         ]}
                     />
                 </div>
                 {
-                    activeTab === "questions" ? !questions.length ? <EmptyList title="No Questions Found" description="No Questions added to this test yet!" /> : <Box className="h-full overflow-auto">
-                        {questions.map((q, index) => (
-                            <Box key={q.question} className="flex gap-4 mb-4">
-                                <Typography>{index + 1}.</Typography>
-                                <Typography variant="h6">
-                                    {renderHtml(q.question)}
-                                </Typography>
+                    activeTab === "questions" ? !questions.length ? <EmptyList title="No Questions Found" description="No Questions added to this test yet!" /> : (
+                        <Box className="h-full overflow-auto flex flex-col">
+                            <Box className="flex-1">
+                                {pagedQuestions.map((q, index) => (
+                                    <Box key={q.id ?? pagedQuestionStart + index} className="flex gap-4 mb-4">
+                                        <Typography>{pagedQuestionStart + index + 1}.</Typography>
+                                        <Typography variant="h6">
+                                            {renderHtml(q.question)}
+                                        </Typography>
+                                    </Box>
+                                ))}
                             </Box>
-                        ))}
-                    </Box> : ""
+                            <TablePagination
+                                qp={reviewQp}
+                                setQp={setReviewQp}
+                                totalPages={totalReviewPages}
+                                totalRecords={questions.length}
+                            />
+                        </Box>
+                    ) : ""
                 }
                 {activeTab === "feedback" ? <TestSample id={Number(testId)} /> : ""}
             </div>
@@ -365,7 +388,7 @@ export default function SingleTestRoot() {
 
             <QuestionListView
                 timeLeft={timeLeft}
-                initialTime={initialTimeRef.current ?? undefined}
+                initialTime={data?.overview?.time}
                 questions={questions}
                 currentQuestion={currentQuestion}
                 currentQuestionIndex={currentIndex}
@@ -396,29 +419,27 @@ export default function SingleTestRoot() {
 
                 <Button
                     variant="contained"
-                    onClick={() =>
-                        isLast
-                            ? !isExpired && setSubmitModal({ open: true, type: "submit" })
-                            : (() => {
-                                const next = currentIndex + 1;
-                                setCurrentIndex(next);
-                                setCurrentQuestion(questions[next]);
-                            })()
-                    }
-                    disabled={isLast && isExpired}
+                    onClick={() => {
+                        if (isLast) {
+                            void handleSubmit("submit");
+                        } else {
+                            const next = currentIndex + 1;
+                            setCurrentIndex(next);
+                            setCurrentQuestion(questions[next]);
+                        }
+                    }}
+                    disabled={submitting || resultOpen || submitModal.open}
                 >
-                    {isLast ? "Submit" : "Next"}
+                    {isLast ? (submitting ? "Submitting..." : "Submit") : "Next"}
                 </Button>
             </div>
 
             <TestSubmissionDialog
                 open={submitModal.open}
-                handleClose={() =>
-                    setSubmitModal({ open: false, type: "submit" })
-                }
-                onSubmit={() => handleSubmit(submitModal.type)}
+                handleClose={() => setSubmitModal({ open: false, type: "submit" })}
+                onSubmit={handleViewSummary}
                 type={submitModal.type}
-                loading={submitting}
+                loading={false}
             />
 
             <TestCancelDialog
@@ -431,24 +452,22 @@ export default function SingleTestRoot() {
                 open={resultOpen}
                 result={result}
                 onReview={() => {
-                    localStorage.removeItem(RESULT_KEY);
+                    try { localStorage.removeItem(RESULT_KEY); } catch { /* ignore */ }
                     navigate(
                         PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.REVIEW_TEST.ROOT({
                             courseId: numericCourseId,
                             testId: numericTestId,
-                        })
-                    )
-                }
-                }
+                        }),
+                        { replace: true }
+                    );
+                }}
                 onBack={() => {
-                    localStorage.removeItem(RESULT_KEY);
+                    try { localStorage.removeItem(RESULT_KEY); } catch { /* ignore */ }
                     navigate(
-                        PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(
-                            numericCourseId
-                        )
-                    )
-                }
-                }
+                        PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(numericCourseId),
+                        { replace: true }
+                    );
+                }}
             />
         </div>
     );

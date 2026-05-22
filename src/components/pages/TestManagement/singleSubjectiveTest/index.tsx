@@ -1,41 +1,34 @@
 import { Box, Button, Divider, Typography, useTheme } from "@mui/material";
 import { ArrowLeft, Timer1 } from "iconsax-reactjs";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATH } from "../../../../routes/PATH";
 import { useDeleteSubjectiveAnswersMutation, useGetSubjectiveAnswerQuery, useGetTestByIdQuery, useSubmitSubjectiveFinalMutation, useUploadSubjectiveAnswersMutation } from "../../../../services/testApi";
 import { showToast } from "../../../../slice/toastSlice";
 import { useAppDispatch } from "../../../../store/hook";
 import type { QuestionProps } from "../../../../types/question";
+import { getApiErrorMessage } from "../../../../utils/apiError";
 import { renderHtml } from "../../../../utils/renderHtml";
+import useTestTimer, { type TimerWarning } from "../../../../utils/useTestTimer";
 import FileDragDrop from "../../../molecules/FileDragDrop";
 import TestCancelDialog from "../../../organism/Dialog/TestCancelDialog";
 import type { SubmissionType } from "../../../organism/Dialog/TestSubmissionDialog";
 import TestSubmissionDialog from "../../../organism/Dialog/TestSubmissionDialog";
 import TwoMinAudio from "/audios/subjective-2-min-warning.mp3";
 import FiveMinAudio from "/audios/subjective-5-min-warning.mp3";
+
 export default function SingleSubjectiveTest() {
     const theme = useTheme();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { courseId, testId } = useParams();
-    const [modal, setModal] = useState({
-        open: false,
-        type: "back"
-    });
+
+    const [modal, setModal] = useState({ open: false, type: "back" });
     const [currentQuestion, setCurrentQuestion] = useState<QuestionProps | null>(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [submitModal, setSubmitModal] = useState({
-        open: false,
-        type: "timer"
-    });
+    const [submitModal, setSubmitModal] = useState({ open: false, type: "timer" });
 
-    const [timeLeft, setTimeLeft] = useState<number | undefined>(undefined);
-    const [isTimerPaused, setIsTimerPaused] = useState(false);
-    const initialTimeRef = useRef<number | undefined>(undefined);
-
-    const fiveMinPlayedRef = useRef(false);
-    const twoMinPlayedRef = useRef(false);
+    const submittedRef = useRef(false);
 
     const fiveMinAudioRef = useRef<HTMLAudioElement | null>(null);
     const twoMinAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -43,8 +36,13 @@ export default function SingleSubjectiveTest() {
     useEffect(() => {
         fiveMinAudioRef.current = new Audio(FiveMinAudio);
         twoMinAudioRef.current = new Audio(TwoMinAudio);
+        return () => {
+            fiveMinAudioRef.current?.pause();
+            twoMinAudioRef.current?.pause();
+            fiveMinAudioRef.current = null;
+            twoMinAudioRef.current = null;
+        };
     }, []);
-
 
     const storageKey = `test_${courseId}_${testId}`;
 
@@ -66,119 +64,71 @@ export default function SingleSubjectiveTest() {
     const [deleteMedia, { isLoading: deleting }] = useDeleteSubjectiveAnswersMutation();
     const [submitSubjective, { isLoading: submitting }] = useSubmitSubjectiveFinalMutation();
 
+    const warnings = useMemo<TimerWarning[]>(() => [
+        { atMs: 5 * 60 * 1000, play: () => { void fiveMinAudioRef.current?.play().catch(() => undefined); } },
+        { atMs: 2 * 60 * 1000, play: () => { void twoMinAudioRef.current?.play().catch(() => undefined); } },
+    ], []);
+
+    const onExpireRef = useRef<() => void>(() => undefined);
+
+    const { timeLeft, startedAt, deadline, wasAlreadyClosed } = useTestTimer({
+        durationMs: data?.overview?.time,
+        endDatetime: data?.overview?.end_datetime,
+        storageKey,
+        onExpire: () => onExpireRef.current(),
+        warnings,
+    });
+
+    // Hydrate progress (currentQuestionIndex) from localStorage and pick the
+    // first question, clamping the index if the test was edited and now has
+    // fewer questions.
     useEffect(() => {
-        const savedData = localStorage.getItem(storageKey);
-        if (savedData) {
-            try {
-                const parsed = JSON.parse(savedData);
-                if (parsed.timeLeft !== undefined) {
-                    setTimeLeft(parsed.timeLeft);
+        if (!data?.data?.length) return;
+        let savedIndex = 0;
+        try {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (typeof parsed.currentQuestionIndex === "number") {
+                    savedIndex = parsed.currentQuestionIndex;
                 }
-                if (parsed.currentQuestionIndex !== undefined) {
-                    setCurrentQuestionIndex(parsed.currentQuestionIndex);
-                }
-            } catch (e) {
-                console.error("Failed to parse saved data", e);
             }
+        } catch {
+            // ignore
         }
-    }, [storageKey]);
-
-    useEffect(() => {
-        const dataToSave = {
-            timeLeft,
-            currentQuestionIndex,
-        };
-        localStorage.setItem(storageKey, JSON.stringify(dataToSave));
-    }, [timeLeft, currentQuestionIndex, storageKey]);
-
-    useEffect(() => {
-        if (data?.overview?.time !== undefined && data?.overview?.end_datetime && initialTimeRef.current === undefined) {
-            const endTime = new Date(data.overview.end_datetime).getTime();
-            const currentTime = Date.now();
-            const timeRemainingFromEnd = Math.max(endTime - currentTime, 0);
-
-            if (timeRemainingFromEnd <= 0) {
-                dispatch(
-                    showToast({
-                        message: "This test has already ended.",
-                        severity: "error",
-                    })
-                );
-                localStorage.removeItem(storageKey);
-                navigate(PATH.TEST.ROOT);
-                return;
-            }
-
-            const actualTimeLeft = Math.min(data.overview.time, timeRemainingFromEnd);
-
-            initialTimeRef.current = actualTimeLeft;
-            const savedData = localStorage.getItem(storageKey);
-            if (!savedData || !JSON.parse(savedData).timeLeft) {
-                setTimeLeft(actualTimeLeft);
-            }
-        }
-    }, [data?.overview?.time, data?.overview?.end_datetime, storageKey, dispatch, navigate]);
-
-    useEffect(() => {
-        if (data?.data?.length) {
-            const savedData = localStorage.getItem(storageKey);
-            if (savedData) {
-                const parsed = JSON.parse(savedData);
-                if (parsed.currentQuestionIndex !== undefined && data.data[parsed.currentQuestionIndex]) {
-                    setCurrentQuestion(data.data[parsed.currentQuestionIndex]);
-                } else {
-                    setCurrentQuestion(data.data[0]);
-                }
-            } else {
-                setCurrentQuestion(data.data[0]);
-            }
-        }
+        const safeIndex = data.data[savedIndex] ? savedIndex : 0;
+        setCurrentQuestionIndex(safeIndex);
+        setCurrentQuestion(data.data[safeIndex] ?? null);
     }, [data, storageKey]);
 
+    // Persist progress. Only writes once there is something to save so we
+    // don't clobber state on the first render of a fresh mount.
     useEffect(() => {
-        if (timeLeft === undefined || timeLeft <= 0 || isTimerPaused) return;
+        if (!data?.data?.length) return;
+        if (currentQuestionIndex === 0) return;
+        try {
+            localStorage.setItem(
+                storageKey,
+                JSON.stringify({ currentQuestionIndex }),
+            );
+        } catch {
+            // ignore
+        }
+    }, [currentQuestionIndex, data, storageKey]);
 
-        const interval = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev === undefined) return undefined;
-                return Math.max(prev - 1000, 0);
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [timeLeft, isTimerPaused]);
-
+    // Redirect students who opened the page after the test window had already
+    // closed.
     useEffect(() => {
-        if (timeLeft === undefined || isTimerPaused) return;
-
-        const fiveMinutesInMs = 5 * 60 * 1000;
-        const twoMinutesInMs = 2 * 60 * 1000;
-
-        if (timeLeft <= fiveMinutesInMs && timeLeft > fiveMinutesInMs - 1000 && !fiveMinPlayedRef.current) {
-            fiveMinPlayedRef.current = true;
-            if (fiveMinAudioRef.current) {
-                fiveMinAudioRef.current.play().catch((error) => {
-                    console.error("Failed to play 5-minute warning audio:", error);
-                });
-            }
+        if (!wasAlreadyClosed) return;
+        dispatch(showToast({ message: "This test has already ended.", severity: "error" }));
+        try {
+            localStorage.removeItem(storageKey);
+            localStorage.removeItem(`${storageKey}__timer`);
+        } catch {
+            // ignore
         }
-
-        if (timeLeft <= twoMinutesInMs && timeLeft > twoMinutesInMs - 1000 && !twoMinPlayedRef.current) {
-            twoMinPlayedRef.current = true;
-            if (twoMinAudioRef.current) {
-                twoMinAudioRef.current.play().catch((error) => {
-                    console.error("Failed to play 2-minute warning audio:", error);
-                });
-            }
-        }
-    }, [timeLeft, isTimerPaused]);
-
-    useEffect(() => {
-        if (timeLeft === 0 && !isTimerPaused) {
-            setIsTimerPaused(true);
-            handleSubmitSubjective();
-        }
-    }, [timeLeft, isTimerPaused]);
+        navigate(PATH.TEST.ROOT);
+    }, [wasAlreadyClosed, dispatch, navigate, storageKey]);
 
     const handlePreviousQuestion = () => {
         if (data?.data && currentQuestionIndex > 0) {
@@ -199,18 +149,12 @@ export default function SingleSubjectiveTest() {
     const isFirstQuestion = currentQuestionIndex === 0;
     const isLastQuestion = currentQuestionIndex === (data?.data?.length || 0) - 1;
 
-    const handleCloseModal = () => {
-        setModal({ open: false, type: "timer" });
-    };
-
-    const handleCloseSubmitModal = () => {
-        setSubmitModal({ open: false, type: "timer" });
-    };
+    const handleCloseModal = () => setModal({ open: false, type: "timer" });
+    const handleCloseSubmitModal = () => setSubmitModal({ open: false, type: "timer" });
 
     const handleFileUpload = async (files: File[]) => {
         if (!files.length || !currentQuestion) return;
 
-        console.log("file is uploaded", { files })
         try {
             const formData = new FormData();
             files.forEach((file, index) => {
@@ -232,10 +176,10 @@ export default function SingleSubjectiveTest() {
                     severity: "success",
                 })
             );
-        } catch (e: any) {
+        } catch (e) {
             dispatch(
                 showToast({
-                    message: e?.data?.message || "Unable to upload files.",
+                    message: getApiErrorMessage(e, "Unable to upload files."),
                     severity: "error",
                 })
             );
@@ -260,20 +204,24 @@ export default function SingleSubjectiveTest() {
                     severity: "success",
                 })
             );
-        } catch (e: any) {
+        } catch (e) {
             dispatch(
                 showToast({
-                    message: e?.data?.message || "Unable to remove files.",
+                    message: getApiErrorMessage(e, "Unable to remove files."),
                     severity: "error",
                 })
             );
         }
     };
 
-    const handleSubmitSubjective = async (showSummary = false) => {
+    const handleSubmitSubjective = useCallback(async (showSummary = false) => {
+        if (submittedRef.current) return;
+        submittedRef.current = true;
         try {
-            setIsTimerPaused(true);
-            const timeTaken = (initialTimeRef.current ?? 0) - (timeLeft ?? 0);
+            const submittedAt = Date.now();
+            const cappedAt = deadline !== undefined ? Math.min(submittedAt, deadline) : submittedAt;
+            const timeTaken = startedAt !== undefined ? Math.max(cappedAt - startedAt, 0) : 0;
+
             const response = await submitSubjective({
                 courseId: Number(courseId),
                 testId: Number(testId),
@@ -286,27 +234,39 @@ export default function SingleSubjectiveTest() {
                     severity: "success",
                 })
             );
-            localStorage.removeItem(storageKey);
+            try {
+                localStorage.removeItem(storageKey);
+                localStorage.removeItem(`${storageKey}__timer`);
+            } catch {
+                // ignore
+            }
             if (showSummary) {
                 setSubmitModal({ open: true, type: "submit" });
             } else {
-                navigate(PATH.TEST.ROOT);
+                navigate(PATH.TEST.ROOT, { replace: true });
             }
-        } catch (e: any) {
+        } catch (e) {
+            submittedRef.current = false;
             dispatch(
                 showToast({
-                    message: e?.data?.message || "Unable to submit test.",
+                    message: getApiErrorMessage(e, "Unable to submit test."),
                     severity: "error",
                 })
             );
         }
-    };
+    }, [courseId, testId, currentQuestion?.id, startedAt, deadline, submitSubjective, dispatch, navigate, storageKey]);
+
+    useEffect(() => {
+        onExpireRef.current = () => {
+            void handleSubmitSubjective(false);
+        };
+    }, [handleSubmitSubjective]);
 
     // The summary dialog only opens once the test is already submitted, so
     // this just dismisses it and routes the user onward.
     const handleViewSummary = () => {
         setSubmitModal({ open: false, type: "submit" });
-        navigate(PATH.TEST.ROOT);
+        navigate(PATH.TEST.ROOT, { replace: true });
     };
 
     const formatTime = (ms: number | undefined) => {
@@ -316,7 +276,6 @@ export default function SingleSubjectiveTest() {
         const seconds = totalSeconds % 60;
         return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     };
-
 
     const timerColors = useMemo(() => {
         const fiveMinutesInMs = 5 * 60 * 1000;
@@ -385,7 +344,7 @@ export default function SingleSubjectiveTest() {
                     Question {currentQuestionIndex + 1} of {data?.data?.length}
                 </Typography>
 
-                {initialTimeRef.current !== undefined && (
+                {timeLeft !== undefined && (
                     <Typography
                         className="py-1.5 px-3 rounded-2xl flex gap-1 items-center"
                         sx={{
@@ -468,7 +427,12 @@ export default function SingleSubjectiveTest() {
                 open={modal.open}
                 handleClose={handleCloseModal}
                 onSubmit={() => {
-                    localStorage.removeItem(storageKey);
+                    try {
+                        localStorage.removeItem(storageKey);
+                        localStorage.removeItem(`${storageKey}__timer`);
+                    } catch {
+                        // ignore
+                    }
                     navigate(PATH.TEST.ROOT);
                 }}
             />

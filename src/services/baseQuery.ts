@@ -36,16 +36,6 @@ function collectHardwareSignals(): string {
 	} catch {
 	}
 
-	console.log("Fingerprint signals", {
-		screen_res,
-		timezone,
-		cpu_cores,
-		memory,
-		platform,
-		webgl_vendor,
-		webgl_renderer,
-	});
-
 	return [screen_res, timezone, cpu_cores, memory, platform, webgl_vendor, webgl_renderer].join("|");
 }
 
@@ -66,7 +56,6 @@ const getDeviceId = (): string => {
 
 	const fingerprint = fnv1a(collectHardwareSignals());
 
-	console.log("my fingerprint", fingerprint);
 	try {
 		localStorage.setItem(CACHE_KEY, fingerprint);
 	} catch {
@@ -100,9 +89,7 @@ export const baseQuery: BaseQueryFn<
 	const result = await baseQueryConfig(args, api, extraOptions);
 
 	if (result.error) {
-
 		const status = result.error.status;
-
 		if (status === 401 || (result.error.data && (result.error.data as any)?.status === 401)) {
 
 
@@ -114,13 +101,6 @@ export const baseQuery: BaseQueryFn<
 						"Your session has expired due to a login from another device. Please verify it's you to continue."
 					)
 				);
-
-				// Verify dispatch worked
-				setTimeout(() => {
-					api.getState() as RootState;
-				}, 100);
-			} else {
-				console.log("⚠️ Popup already showing, skipping dispatch");
 			}
 		}
 	}

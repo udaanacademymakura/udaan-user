@@ -65,9 +65,11 @@ export interface TestProps {
     selections: SelectionType;
     mega_categories?: string[];
     download_format_url?: string;
-    results: {
-        attempted: number;
-        score: number
+    result?: {
+        attempted: number | null;
+        score: number | null;
+        percentage: number | null;
+        total_questions: number | null;
     }
 }
 export interface TestList {

@@ -9,6 +9,7 @@ import { setPurchase } from "../../../slice/purchaseSlice";
 import { showToast } from "../../../slice/toastSlice";
 import { useAppDispatch, useAppSelector } from "../../../store/hook";
 import type { CourseExpiry, CourseSubscription, CourseTypeProps } from '../../../types/course';
+import { getApiErrorMessage } from '../../../utils/apiError';
 
 interface Props {
     courseType?: CourseTypeProps;
@@ -54,8 +55,6 @@ export default function BannerCourseTypeModule({ courseType, courseExpiry, cours
         }
     }, [courseSubscription]);
 
-    console.log("selected plan", selectedPlan)
-
     const renderButtons = () => {
         if (courseType === "free") {
             return <Button variant="contained" className="black__btn" fullWidth onClick={async () => {
@@ -80,10 +79,10 @@ export default function BannerCourseTypeModule({ courseType, courseExpiry, cours
                         })
                     )
                 }
-                catch (e: any) {
+                catch (e) {
                     dispatch(
                         showToast({
-                            message: e?.data?.message || "Something went wrong. Try again Later.",
+                            message: getApiErrorMessage(e, "Something went wrong. Try again Later."),
                             severity: "error"
                         })
                     )
@@ -134,10 +133,10 @@ export default function BannerCourseTypeModule({ courseType, courseExpiry, cours
                                 })
                             )
                         }
-                        catch (e: any) {
+                        catch (e) {
                             dispatch(
                                 showToast({
-                                    message: e?.data?.message || "Something went wrong. Try again Later.",
+                                    message: getApiErrorMessage(e, "Something went wrong. Try again Later."),
                                     severity: "error"
                                 })
                             )

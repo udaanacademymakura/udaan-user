@@ -108,7 +108,7 @@ export default function TestCard({ test, havePurchased, status: testStatus }: { 
             {testStatus === "completed" ? <div className="flex items-center gap-2">
               {test?.test_type !== "subjective" && (
                 <Donut
-                  progress={test?.results?.score || 0}
+                  progress={test?.result?.percentage ?? 0}
                   size={60}
                   thickness={6}
                 />
@@ -116,9 +116,9 @@ export default function TestCard({ test, havePurchased, status: testStatus }: { 
               <div className="content">
                 <strong className="block text-[12px] leading-1">Your Score</strong>
                 {test?.test_type === "subjective" ? (
-                  <p className="text-[14px] flex items-center"><Typography variant="h4" fontWeight={600} color="primary">{test?.results?.score || 0}</Typography>/{test?.full_mark}</p>
+                  <p className="text-[14px] flex items-center"><Typography variant="h4" fontWeight={600} color="primary">{test?.result?.score ?? 0}</Typography>/{test?.full_mark}</p>
                 ) : (
-                  <p className="text-[14px]"><strong>{test?.results?.attempted || 0}</strong>/{test?.total_questions}</p>
+                  <p className="text-[14px]"><strong>{test?.result?.attempted ?? 0}</strong>/{test?.total_questions}</p>
                 )}
               </div>
             </div> : ""}

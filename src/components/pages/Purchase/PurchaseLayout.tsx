@@ -11,6 +11,7 @@ import { useGetBundleByOverviewQuery, useGetTestOverviewQuery } from '../../../s
 import { showToast } from '../../../slice/toastSlice';
 import { useAppDispatch } from '../../../store/hook';
 import type { PaymentMethods, PurchaseFormValues, PurchaseModuleTypes } from "../../../types/purchase";
+import { getApiErrorMessage } from '../../../utils/apiError';
 import Quote from '../../molecules/Quote';
 import PageHeader from '../../organism/PageHeader';
 import CoursePaymentCard from './CoursePaymentCard';
@@ -137,10 +138,9 @@ export default function PurchaseLayout() {
                     }
                 }
 
-            } catch (e: any) {
-                console.error("Payment Error:", e);
+            } catch (e) {
                 dispatch(showToast({
-                    message: e?.data?.message || "Unable to proceed for payment. Try Again Later.",
+                    message: getApiErrorMessage(e, "Unable to proceed for payment. Try Again Later."),
                     severity: "error"
                 }));
             }
