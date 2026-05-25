@@ -73,7 +73,6 @@ import ForgotPasswordPage from "../components/pages/auth/forgotPassword";
 import ForgotPasswordVerify from "../components/pages/auth/forgotPassword/verify";
 import ForgotPasswordReset from "../components/pages/auth/forgotPassword/reset";
 import SetPasswordPage from "../components/pages/auth/setPassword";
-import LiveClassGate from "../components/organism/LiveClassGate";
 
 const router = createBrowserRouter([
   {
@@ -173,10 +172,10 @@ const router = createBrowserRouter([
         element: <RootLayout />,
         children: [
           {
-            index: true, path: "/", element: <LiveClassGate><App /></LiveClassGate>
+            index: true, path: "/", element: <App />
           },
           {
-            path: PATH.DASHBOARD.ROOT, element: <LiveClassGate><App /></LiveClassGate>
+            path: PATH.DASHBOARD.ROOT, element: <App />
           },
           // COURSE INSIDE LAYOUT
           {

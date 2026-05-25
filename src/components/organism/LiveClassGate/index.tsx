@@ -4,7 +4,6 @@ import type { LiveClassProps } from "../../../types/liveClass";
 import DashboardSkeleton from "./DashboardSkeleton";
 import OngoingLiveOverlay from "./OngoingLiveOverlay";
 
-const SESSION_KEY = "udaan_live_gate_dismissed";
 const PAGE_SIZE = 6;
 
 interface Props {
@@ -12,16 +11,15 @@ interface Props {
 }
 
 export default function LiveClassGate({ children }: Props) {
-    const [dismissed, setDismissed] = useState<boolean>(
-        () => typeof window !== "undefined" && sessionStorage.getItem(SESSION_KEY) === "1"
-    );
+    const [dismissed, setDismissed] = useState(false);
     const [pageIndex, setPageIndex] = useState(1);
     const [items, setItems] = useState<LiveClassProps[]>([]);
 
-    const { data, isLoading, isFetching } = useGetAllLiveClassesQuery(
-        { pageIndex, pageSize: PAGE_SIZE, type: "ongoing" },
-        { skip: dismissed }
-    );
+    const { data, isLoading, isFetching } = useGetAllLiveClassesQuery({
+        pageIndex,
+        pageSize: PAGE_SIZE,
+        type: "ongoing",
+    });
 
     const page = data?.data?.data ?? [];
     const totalCount = data?.data?.pagination?.total ?? 0;
@@ -39,10 +37,7 @@ export default function LiveClassGate({ children }: Props) {
         });
     }, [data, page, pageIndex]);
 
-    const handleDismiss = () => {
-        sessionStorage.setItem(SESSION_KEY, "1");
-        setDismissed(true);
-    };
+    const handleDismiss = () => setDismissed(true);
 
     const handleLoadMore = () => {
         if (isFetching) return;

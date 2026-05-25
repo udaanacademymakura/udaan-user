@@ -1,6 +1,15 @@
-import { Box, Button, CircularProgress, Typography, useTheme } from "@mui/material";
+import {
+    Box,
+    Button,
+    CircularProgress,
+    IconButton,
+    Typography,
+    useTheme,
+} from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { CloseCircle, VideoSquare } from "iconsax-reactjs";
 import { useState } from "react";
+import type { MouseEvent } from "react";
 import type { LiveClassProps } from "../../../types/liveClass";
 import OngoingLiveRow from "./OngoingLiveRow";
 
@@ -26,8 +35,9 @@ export default function OngoingLiveOverlay({
     const theme = useTheme();
     const isDark = theme.palette.mode === "dark";
     const [shaking, setShaking] = useState(false);
+    const remainingCount = Math.max(totalCount - items.length, 0);
 
-    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
         if (e.target === e.currentTarget && !shaking) {
             setShaking(true);
         }
@@ -43,35 +53,40 @@ export default function OngoingLiveOverlay({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                px: 2,
-                backgroundColor: isDark ? "rgba(10, 12, 20, 0.55)" : "rgba(255, 255, 255, 0.45)",
-                backdropFilter: "blur(14px) saturate(160%)",
-                WebkitBackdropFilter: "blur(14px) saturate(160%)",
+                px: { xs: 1.5, sm: 2 },
+                py: 2,
+                background: isDark
+                    ? `linear-gradient(135deg, ${alpha(theme.palette.background.default, 0.82)}, ${alpha(theme.palette.primary.main, 0.2)})`
+                    : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.66)}, ${alpha(theme.palette.primary.contrastText, 0.84)})`,
+                backdropFilter: "blur(18px) saturate(150%)",
+                WebkitBackdropFilter: "blur(18px) saturate(150%)",
             }}
         >
             <Box
                 onAnimationEnd={() => setShaking(false)}
                 sx={{
                     width: "100%",
-                    maxWidth: 480,
-                    maxHeight: "85vh",
+                    maxWidth: 560,
+                    maxHeight: "min(86vh, 720px)",
                     display: "flex",
                     flexDirection: "column",
-                    borderRadius: "20px",
+                    borderRadius: { xs: "16px", sm: "18px" },
                     background: isDark
-                        ? "rgba(28, 32, 44, 0.85)"
-                        : "rgba(255, 255, 255, 0.85)",
-                    border: `1px solid ${theme.palette.divider}`,
-                    boxShadow: "0 24px 60px rgba(0, 0, 0, 0.18)",
-                    backdropFilter: "blur(20px) saturate(160%)",
-                    WebkitBackdropFilter: "blur(20px) saturate(160%)",
+                        ? alpha(theme.palette.background.paper, 0.92)
+                        : alpha(theme.palette.primary.contrastText, 0.94),
+                    border: `1px solid ${alpha(theme.palette.separator.dark, isDark ? 0.5 : 0.85)}`,
+                    boxShadow: isDark
+                        ? `0 28px 70px ${alpha(theme.palette.common.black, 0.42)}`
+                        : `0 28px 70px ${alpha(theme.palette.primary.main, 0.16)}`,
+                    backdropFilter: "blur(22px) saturate(165%)",
+                    WebkitBackdropFilter: "blur(22px) saturate(165%)",
                     overflow: "hidden",
                     transformOrigin: "center center",
                     willChange: "transform",
                     animation: shaking ? "live-gate-attention 0.45s ease-in-out 2" : "none",
                     "@keyframes live-gate-attention": {
                         "0%": { transform: "scale(1)" },
-                        "50%": { transform: "scale(1.04)" },
+                        "50%": { transform: "scale(1.035)" },
                         "100%": { transform: "scale(1)" },
                     },
                 }}
@@ -81,32 +96,53 @@ export default function OngoingLiveOverlay({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        padding: "16px 20px",
-                        borderBottom: `1px solid ${theme.palette.divider}`,
+                        gap: 1.5,
+                        padding: { xs: "16px", sm: "18px 20px" },
+                        borderBottom: `1px solid ${alpha(theme.palette.separator.dark, 0.75)}`,
+                        background: isDark
+                            ? alpha(theme.palette.primary.light, 0.24)
+                            : `linear-gradient(90deg, ${alpha(theme.palette.error.light, 0.76)}, ${alpha(theme.palette.primary.light, 0.46)})`,
                     }}
                 >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
                         <Box
                             sx={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: "10px",
-                                background: theme.palette.error.light,
-                                color: theme.palette.error.main,
+                                width: 42,
+                                height: 42,
+                                borderRadius: "12px",
+                                backgroundColor: "error.main",
+                                color: "error.contrastText",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                boxShadow: `0 12px 28px ${alpha(theme.palette.error.main, 0.28)}`,
+                                position: "relative",
+                                flexShrink: 0,
+                                "&::before": {
+                                    content: '""',
+                                    position: "absolute",
+                                    inset: -5,
+                                    borderRadius: "15px",
+                                    border: `1px solid ${alpha(theme.palette.error.main, 0.28)}`,
+                                },
                             }}
                         >
-                            <VideoSquare size={20} variant="Bold" />
+                            <VideoSquare size={22} variant="Bold" />
                         </Box>
-                        <Box>
-                            <Typography sx={{ fontSize: "15px", fontWeight: 700, color: "text.primary", lineHeight: 1.2 }}>
+                        <Box sx={{ minWidth: 0 }}>
+                            <Typography
+                                sx={{
+                                    fontSize: { xs: "15px", sm: "16px" },
+                                    fontWeight: 800,
+                                    color: "text.dark",
+                                    lineHeight: 1.25,
+                                }}
+                            >
                                 Live Class In Progress
                             </Typography>
                             <Typography sx={{ fontSize: "11.5px", color: "text.secondary" }}>
                                 {loading
-                                    ? "Checking your classes…"
+                                    ? "Checking your classes..."
                                     : totalCount === 1
                                         ? "1 class is ongoing now"
                                         : `${totalCount} classes are ongoing now`}
@@ -114,35 +150,34 @@ export default function OngoingLiveOverlay({
                         </Box>
                     </Box>
 
-                    <Box
-                        component="button"
+                    <IconButton
                         onClick={onDismiss}
                         aria-label="Close"
+                        size="small"
                         sx={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            color: "text.secondary",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            p: 0,
-                            color: (theme) => theme.palette.error.main
+                            color: "error.main",
+                            flexShrink: 0,
+                            "&:hover": {
+                                backgroundColor: alpha(theme.palette.error.main, 0.1),
+                            },
                         }}
                     >
                         <CloseCircle size={26} variant="Bold" />
-                    </Box>
+                    </IconButton>
                 </Box>
 
                 <Box
                     sx={{
                         flex: 1,
                         overflowY: "auto",
-                        padding: "14px 16px",
+                        padding: { xs: "12px", sm: "14px 16px" },
                         display: "flex",
                         flexDirection: "column",
-                        gap: "10px",
+                        gap: "12px",
                         minHeight: 120,
+                        backgroundColor: isDark
+                            ? alpha(theme.palette.background.default, 0.18)
+                            : alpha(theme.palette.background.paper, 0.68),
                     }}
                 >
                     {loading && items.length === 0 ? (
@@ -165,13 +200,19 @@ export default function OngoingLiveOverlay({
                                         mt: "4px",
                                         textTransform: "none",
                                         fontSize: "12.5px",
-                                        fontWeight: 600,
+                                        fontWeight: 700,
+                                        alignSelf: "center",
+                                        borderRadius: "999px",
+                                        px: 2,
+                                        color: "primary.main",
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                                        "&:hover": {
+                                            backgroundColor: alpha(theme.palette.primary.main, 0.14),
+                                        },
                                     }}
                                 >
-                                    {loadingMore ? (
-                                        <CircularProgress size={14} sx={{ mr: 1 }} />
-                                    ) : null}
-                                    {loadingMore ? "Loading…" : `Show more (${totalCount - items.length} remaining)`}
+                                    {loadingMore ? <CircularProgress size={14} sx={{ mr: 1 }} /> : null}
+                                    {loadingMore ? "Loading..." : `Show more (${remainingCount} remaining)`}
                                 </Button>
                             )}
                         </>
@@ -181,7 +222,7 @@ export default function OngoingLiveOverlay({
                 <Box
                     sx={{
                         padding: "12px 20px 16px",
-                        borderTop: `1px solid ${theme.palette.divider}`,
+                        borderTop: `1px solid ${alpha(theme.palette.separator.dark, 0.75)}`,
                         display: "flex",
                         justifyContent: "center",
                     }}
@@ -194,11 +235,11 @@ export default function OngoingLiveOverlay({
                             textTransform: "none",
                             fontSize: "12.5px",
                             color: "text.secondary",
-                            fontWeight: 600,
+                            fontWeight: 700,
                             "&:hover": { color: "primary.main" },
                         }}
                     >
-                        Continue to dashboard →
+                        Continue to dashboard
                     </Button>
                 </Box>
             </Box>
