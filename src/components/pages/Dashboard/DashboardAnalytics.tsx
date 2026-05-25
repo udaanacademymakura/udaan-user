@@ -8,11 +8,7 @@ export default function DashboardAnalytics() {
 
     return (
         <Box
-            sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr 1fr', lg: 'repeat(4, 1fr)' },
-                gap: '10px',
-            }}
+            className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4"
         >
             {isLoading
                 ? Array.from({ length: 4 }).map((_, i) => (

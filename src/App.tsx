@@ -18,7 +18,6 @@ export default function App() {
           pb: 4,
         }}
       >
-        {/* Left column */}
         <Box className="xl:col-span-8" sx={{ display: "flex", flexDirection: "column", gap: "18px", overflow: "hidden" }}>
           <DashboardTopBanners />
           <DashboardAnalytics />

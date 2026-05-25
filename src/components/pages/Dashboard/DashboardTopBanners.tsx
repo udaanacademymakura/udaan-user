@@ -4,16 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { PATH } from "../../../routes/PATH";
 import { useGetAllLiveClassesQuery } from "../../../services/liveApi";
 
-// const STATIC_NOTICE = {
-//     title: "Your courses may expire soon — Renew now to continue learning!",
-//     body: "Stay on track with your Loksewa preparation. Renew before Chaitra 30 and get 20% off on renewals.",
-// };
 
 export default function DashboardTopBanners() {
     const navigate = useNavigate();
 
     const [liveDismissed, setLiveDismissed] = useState(false);
-    // const [noticeDismissed, setNoticeDismissed] = useState(false);
 
     const { data, isLoading } = useGetAllLiveClassesQuery({
         pageIndex: 1,
@@ -35,7 +30,6 @@ export default function DashboardTopBanners() {
         );
     };
 
-    // Compute "started X mins ago" label
     const startedLabel = (() => {
         if (!ongoingClass?.start_time) return "";
         const diff = Math.floor((Date.now() - new Date(ongoingClass.start_time).getTime()) / 60000);
@@ -140,7 +134,6 @@ export default function DashboardTopBanners() {
                                 },
                             }} />
 
-                            {/* Info */}
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <Typography sx={{
                                     fontSize: "10px", fontWeight: 700,

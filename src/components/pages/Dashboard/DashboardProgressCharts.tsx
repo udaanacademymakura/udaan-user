@@ -43,7 +43,7 @@ export default function DashboardProgressCharts() {
             padding: { left: 4, right: 4, top: 0, bottom: 0 },
         },
         xaxis: {
-            categories: [] as string[], // overridden per chart
+            categories: [] as string[],
             labels: {
                 style: { fontSize: "10px", colors: textSecondary, fontFamily },
             },
@@ -130,8 +130,15 @@ export default function DashboardProgressCharts() {
     return (
         <Box>
             {/* Section header — mirrors DashboardPurchasedCourseListing header */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-                <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: "14.5px" }}>
+            <Box sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+                flexWrap: "wrap",
+                mb: 1.5,
+            }}>
+                <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: { xs: "13.5px", sm: "14.5px" } }}>
                     Your Progress
                 </Typography>
                 <Select
@@ -139,11 +146,14 @@ export default function DashboardProgressCharts() {
                     value={range}
                     onChange={(e) => setRange(Number(e.target.value) as 7 | 30 | 90)}
                     sx={{
-                        fontSize: "12px",
+                        fontSize: { xs: "11px", sm: "12px" },
                         borderRadius: "99px",
-                        padding: "0 16px 0 0",
+                        padding: "0 12px 0 0",
                         ".MuiOutlinedInput-notchedOutline": { borderColor: "divider" },
-                        ".MuiSelect-select": { py: "4px", px: "14px !important" },
+                        ".MuiSelect-select": {
+                            py: "3px",
+                            px: { xs: "10px !important", sm: "14px !important" },
+                        },
                     }}
                 >
                     <MenuItem value={7}><Typography variant="caption">Last 7 days</Typography></MenuItem>
@@ -153,63 +163,83 @@ export default function DashboardProgressCharts() {
             </Box>
 
             {/* Two chart cards */}
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: "12px" }}>
+            <Box className="flex flex-col gap-4 md:grid md:grid-cols-2">
 
-                {/* Study Time */}
                 <Box sx={{
-                    p: 2,
+                    p: { xs: 1.25, sm: 2 },
                     bgcolor: "background.paper",
                     border: `1px solid ${dividerColor}`,
                     borderRadius: 2,
                     boxShadow: "0 1px 3px rgba(0,0,0,.06), 0 4px 6px rgba(0,0,0,.03)",
                     opacity: studyLoading ? 0.5 : 1,
                     transition: "opacity 0.2s",
+                    minWidth: 0,
+                    overflow: "hidden",
                 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <Typography variant="body2" fontWeight={700}>Study Time</Typography>
+                    <Box sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                        minWidth: 0,
+                    }}>
+                        <Typography variant="body2" fontWeight={700} sx={{ fontSize: { xs: "12.5px", sm: "14px" } }}>
+                            Study Time
+                        </Typography>
                         {studyLoading ? (
                             <Skeleton variant="rounded" width={100} height={20} sx={{ borderRadius: "99px" }} />
                         ) : (
                             <Box component="span" sx={{
-                                fontSize: "10px", fontWeight: 700,
+                                fontSize: { xs: "9.5px", sm: "10px" },
+                                fontWeight: 700,
                                 bgcolor: changePct >= 0 ? successLight : "error.light",
                                 color: changePct >= 0 ? successMain : "error.main",
-                                px: "8px", py: "2px", borderRadius: "99px",
+                                px: { xs: "6px", sm: "8px" },
+                                py: "2px",
+                                borderRadius: "99px",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0,
                             }}>
-                                {changePct >= 0 ? "+" : ""}{changePct}% vs last period
+                                {changePct >= 0 ? "+" : ""}{changePct}%
+                                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                                    {" vs last period"}
+                                </Box>
                             </Box>
                         )}
                     </Box>
 
-                    <ReactApexChart
-                        options={studyOptions}
-                        series={[{ name: "Study Time", data: studyChartData }]}
-                        type="bar"
-                        height={160}
-                    />
+                    <Box sx={{ height: { xs: 140, sm: 160 } }}>
+                        <ReactApexChart
+                            options={studyOptions}
+                            series={[{ name: "Study Time", data: studyChartData }]}
+                            type="bar"
+                            height="100%"
+                            width="100%"
+                        />
+                    </Box>
 
-                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, mt: 1 }}>
-                        <Box sx={{ textAlign: "center", bgcolor: primaryLight, borderRadius: 1.5, py: 1 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: { xs: 0.75, sm: 1 }, mt: 1 }}>
+                        <Box sx={{ textAlign: "center", bgcolor: primaryLight, borderRadius: 1.5, py: { xs: 0.75, sm: 1 } }}>
                             {studyLoading ? (
                                 <Skeleton variant="text" width={40} height={28} sx={{ mx: "auto" }} />
                             ) : (
-                                <Typography fontWeight={800} sx={{ fontSize: "18px", lineHeight: 1, color: primaryDark }}>
+                                <Typography fontWeight={800} sx={{ fontSize: { xs: "16px", sm: "18px" }, lineHeight: 1, color: primaryDark }}>
                                     {weekStudy}h
                                 </Typography>
                             )}
-                            <Typography variant="caption" sx={{ color: "text.secondary", mt: "2px", display: "block" }}>
+                            <Typography variant="caption" sx={{ color: "text.secondary", mt: "2px", display: "block", fontSize: { xs: "10px", sm: "12px" } }}>
                                 This week
                             </Typography>
                         </Box>
-                        <Box sx={{ textAlign: "center", bgcolor: primaryLight, borderRadius: 1.5, py: 1 }}>
+                        <Box sx={{ textAlign: "center", bgcolor: primaryLight, borderRadius: 1.5, py: { xs: 0.75, sm: 1 } }}>
                             {studyLoading ? (
                                 <Skeleton variant="text" width={40} height={28} sx={{ mx: "auto" }} />
                             ) : (
-                                <Typography fontWeight={800} sx={{ fontSize: "18px", lineHeight: 1, color: primaryDark }}>
+                                <Typography fontWeight={800} sx={{ fontSize: { xs: "16px", sm: "18px" }, lineHeight: 1, color: primaryDark }}>
                                     {periodStudy}h
                                 </Typography>
                             )}
-                            <Typography variant="caption" sx={{ color: "text.secondary", mt: "2px", display: "block" }}>
+                            <Typography variant="caption" sx={{ color: "text.secondary", mt: "2px", display: "block", fontSize: { xs: "10px", sm: "12px" } }}>
                                 This period
                             </Typography>
                         </Box>
@@ -218,58 +248,83 @@ export default function DashboardProgressCharts() {
 
                 {/* Test Scores */}
                 <Box sx={{
-                    p: 2,
+                    p: { xs: 1.25, sm: 2 },
                     bgcolor: "background.paper",
                     border: `1px solid ${dividerColor}`,
                     borderRadius: 2,
                     boxShadow: "0 1px 3px rgba(0,0,0,.06), 0 4px 6px rgba(0,0,0,.03)",
                     opacity: scoreLoading ? 0.5 : 1,
                     transition: "opacity 0.2s",
+                    minWidth: 0,
+                    overflow: "hidden",
                 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <Typography variant="body2" fontWeight={700}>Test Scores</Typography>
+                    <Box sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                        minWidth: 0,
+                    }}>
+                        <Typography variant="body2" fontWeight={700} sx={{ fontSize: { xs: "12.5px", sm: "14px" } }}>
+                            Test Scores
+                        </Typography>
                         {scoreLoading ? (
                             <Skeleton variant="rounded" width={90} height={20} sx={{ borderRadius: "99px" }} />
                         ) : (
                             <Box component="span" sx={{
-                                fontSize: "10px", fontWeight: 700,
-                                bgcolor: secondaryLight, color: secondaryDark,
-                                px: "8px", py: "2px", borderRadius: "99px",
+                                fontSize: { xs: "9.5px", sm: "10px" },
+                                fontWeight: 700,
+                                bgcolor: secondaryLight,
+                                color: secondaryDark,
+                                px: { xs: "6px", sm: "8px" },
+                                py: "2px",
+                                borderRadius: "99px",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0,
                             }}>
-                                {totalTests} tests taken
+                                {totalTests}
+                                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                                    {" tests taken"}
+                                </Box>
+                                <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                                    {" tests"}
+                                </Box>
                             </Box>
                         )}
                     </Box>
 
-                    <ReactApexChart
-                        options={scoreOptions}
-                        series={[{ name: "Score", data: scoreChartData }]}
-                        type="line"
-                        height={160}
-                    />
+                    <Box sx={{ height: { xs: 140, sm: 160 } }}>
+                        <ReactApexChart
+                            options={scoreOptions}
+                            series={[{ name: "Score", data: scoreChartData }]}
+                            type="line"
+                            height="100%"
+                            width="100%"
+                        />
+                    </Box>
 
-                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, mt: 1 }}>
-                        <Box sx={{ textAlign: "center", bgcolor: secondaryLight, borderRadius: 1.5, py: 1 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: { xs: 0.75, sm: 1 }, mt: 1 }}>
+                        <Box sx={{ textAlign: "center", bgcolor: secondaryLight, borderRadius: 1.5, py: { xs: 0.75, sm: 1 } }}>
                             {scoreLoading ? (
                                 <Skeleton variant="text" width={40} height={28} sx={{ mx: "auto" }} />
                             ) : (
-                                <Typography fontWeight={800} sx={{ fontSize: "18px", lineHeight: 1, color: secondaryDark }}>
+                                <Typography fontWeight={800} sx={{ fontSize: { xs: "16px", sm: "18px" }, lineHeight: 1, color: secondaryDark }}>
                                     {avgScore}%
                                 </Typography>
                             )}
-                            <Typography variant="caption" sx={{ color: "text.secondary", mt: "2px", display: "block" }}>
+                            <Typography variant="caption" sx={{ color: "text.secondary", mt: "2px", display: "block", fontSize: { xs: "10px", sm: "12px" } }}>
                                 Avg score
                             </Typography>
                         </Box>
-                        <Box sx={{ textAlign: "center", bgcolor: secondaryLight, borderRadius: 1.5, py: 1 }}>
+                        <Box sx={{ textAlign: "center", bgcolor: secondaryLight, borderRadius: 1.5, py: { xs: 0.75, sm: 1 } }}>
                             {scoreLoading ? (
                                 <Skeleton variant="text" width={40} height={28} sx={{ mx: "auto" }} />
                             ) : (
-                                <Typography fontWeight={800} sx={{ fontSize: "18px", lineHeight: 1, color: secondaryDark }}>
+                                <Typography fontWeight={800} sx={{ fontSize: { xs: "16px", sm: "18px" }, lineHeight: 1, color: secondaryDark }}>
                                     {bestScore}%
                                 </Typography>
                             )}
-                            <Typography variant="caption" sx={{ color: "text.secondary", mt: "2px", display: "block" }}>
+                            <Typography variant="caption" sx={{ color: "text.secondary", mt: "2px", display: "block", fontSize: { xs: "10px", sm: "12px" } }}>
                                 Best score
                             </Typography>
                         </Box>

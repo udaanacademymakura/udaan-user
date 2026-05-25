@@ -46,13 +46,24 @@ export default function LiveClassGate({ children }: Props) {
     };
 
     if (dismissed) return <>{children}</>;
-    if (!isLoading && totalCount === 0) return <>{children}</>;
+
+    // Still checking — render the page skeleton only, no overlay, so users with
+    // no live class don't realize we're polling for one.
+    if (isLoading) {
+        return (
+            <div className="relative h-full">
+                <DashboardSkeleton />
+            </div>
+        );
+    }
+
+    if (totalCount === 0) return <>{children}</>;
 
     return (
         <div className="relative h-full">
             <DashboardSkeleton />
             <OngoingLiveOverlay
-                loading={isLoading}
+                loading={false}
                 items={items}
                 totalCount={totalCount}
                 onDismiss={handleDismiss}

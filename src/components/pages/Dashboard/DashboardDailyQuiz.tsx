@@ -181,7 +181,6 @@ function DailyQuizSkeleton() {
     );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 export default function DashboardDailyQuiz() {
     const theme = useTheme();
 
@@ -245,9 +244,8 @@ export default function DashboardDailyQuiz() {
             </Box>
 
             <Box
+                className="flex flex-col sm:grid sm:grid-cols-2 gap-2 sm:gap-4 mb-4"
                 sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
                     gap: "10px",
                     mb: 1.5,
                 }}
@@ -306,7 +304,6 @@ export default function DashboardDailyQuiz() {
                     },
                 }}
             >
-                {/* Category label */}
                 <Typography
                     variant="caption"
                     sx={{
