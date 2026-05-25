@@ -74,8 +74,8 @@ export default function LiveClassCard({ data, courseId }: { data: LiveClassProps
             <Box
                 sx={{
                     position: "relative",
-                    width: { xs: 72, sm: 100 },
-                    height: { xs: 72, sm: 100 },
+                    width: { xs: 120, sm: 160 },
+                    aspectRatio: "16 / 9",
                     flexShrink: 0,
                     borderRadius: "10px",
                     overflow: "hidden",
