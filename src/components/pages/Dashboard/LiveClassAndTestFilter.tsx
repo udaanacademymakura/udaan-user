@@ -384,7 +384,7 @@ export default function LiveClassAndTestFilter() {
                 />
             </Box>
 
-            <div className="w-full">
+            <div className="w-full flex flex-col gap-4">
                 {(liveLoading || todayClasses.length > 0) && (
                     <Box sx={cardSx}>
                         <div className="flex items-center justify-between mb-2.5">
@@ -416,7 +416,7 @@ export default function LiveClassAndTestFilter() {
 
                 {(noticesLoading || notices.length > 0) && (
                     <Box sx={cardSx}>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center ">
                             <Typography variant="subtitle1" fontWeight={700} mb={1.5} sx={{ fontSize: "14.5px" }}>
                                 Notice Board
                             </Typography>
