@@ -3,13 +3,13 @@ import {
     AlertTitle,
     Box,
     Button,
-    CircularProgress,
     Divider,
     Typography,
 } from "@mui/material";
 import { Maximize2 } from "iconsax-reactjs";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import JoinProgress from "../../../../organism/JoinProgress";
 import { PATH } from "../../../../../routes/PATH";
 import { useGetMeetingSignatureMutation, useGetSingleLiveClassQuery } from "../../../../../services/courseApi";
 import { useGetZoomAccountsQuery } from "../../../../../services/liveApi";
@@ -25,6 +25,21 @@ type MeetingStatus =
     | "ready_to_join"
     | "ended";
 
+const MIN_PHASE_MS = 450;
+const CONGESTION_WINDOW_MS = 2 * 60 * 1000;
+const PHASE_4_TO_5_WATCHDOG_MS = 3500;
+const PHASE_TO_6_WATCHDOG_MS = 7000;
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+function joinJitterMs(userId: number | string | undefined, maxMs: number): number {
+    if (!userId || maxMs <= 0) return 0;
+    let h = 0;
+    const s = String(userId);
+    for (let i = 0; i < s.length; i++) h = ((h * 31) + s.charCodeAt(i)) | 0;
+    return Math.abs(h) % maxMs;
+}
+
 export default function SingleLiveClassRoot() {
     const { courseId, liveId } = useParams();
     const navigate = useNavigate();
@@ -34,6 +49,12 @@ export default function SingleLiveClassRoot() {
     const [error, setError] = useState<string | null>(null);
     const [meetingUrl, setMeetingUrl] = useState<string | null>(null);
     const [_isSignatureLoading, setIsSignatureLoading] = useState(false);
+    const [joinPhase, setJoinPhase] = useState<number>(1);
+    const watchdogStartedRef = useRef(false);
+    const watchdogTimersRef = useRef<{
+        t5?: ReturnType<typeof setTimeout>;
+        t6?: ReturnType<typeof setTimeout>;
+    }>({});
 
     const { data: liveClassData, isLoading: isLoadingLiveClass } = useGetSingleLiveClassQuery({
         courseId: Number(courseId),
@@ -65,6 +86,7 @@ export default function SingleLiveClassRoot() {
     useEffect(() => {
         if (isLoadingLiveClass || isLoadingZoomAccounts) {
             setMeetingStatus("initial_loading");
+            setJoinPhase((curr) => (curr < 1 ? 1 : curr));
             return;
         }
 
@@ -81,6 +103,11 @@ export default function SingleLiveClassRoot() {
             return;
         }
 
+        const advance = async (next: number) => {
+            setJoinPhase((curr) => (curr < next ? next : curr));
+            await sleep(MIN_PHASE_MS);
+        };
+
         const checkStatusAndPrepare = async () => {
             const meetingStartTime = meetingData.start_time ? new Date(meetingData.start_time) : null;
             const currentTime = new Date();
@@ -91,9 +118,15 @@ export default function SingleLiveClassRoot() {
             }
 
             try {
+                // Phase 2 — basic gates passed, now preparing
+                await advance(2);
+
                 setMeetingStatus("preparing_zoom");
                 setIsSignatureLoading(true);
                 setError(null);
+
+                // Phase 3 — about to request the signature
+                await advance(3);
 
                 const meetingNumber = meetingData.start_url.match(/\/j\/(\d+)/)?.[1];
                 const password = new URL(meetingData.start_url).searchParams.get("pwd");
@@ -105,6 +138,18 @@ export default function SingleLiveClassRoot() {
 
                 if (!meetingNumber) throw new Error("Invalid Meeting URL in server data.");
                 if (!sdkKey) throw new Error("Zoom SDK Key not found for this account.");
+
+                // Load-smoothing jitter: only inside ±2 min of class start, scaled by class size.
+                // Keeps peak signature throughput at ~40 req/sec regardless of how many students hit Join.
+                const startMs = meetingStartTime?.getTime() ?? 0;
+                const inCongestionWindow =
+                    startMs > 0 && Math.abs(Date.now() - startMs) < CONGESTION_WINDOW_MS;
+                if (inCongestionWindow) {
+                    const students = meetingData.active_students ?? 0;
+                    const maxMs = Math.min(15_000, Math.ceil(students / 40) * 1000);
+                    const jitter = joinJitterMs(user?.id, maxMs);
+                    if (jitter > 0) await sleep(jitter);
+                }
 
                 const sigRes = await generateSignature({
                     meeting_id: Number(meetingNumber),
@@ -133,6 +178,9 @@ export default function SingleLiveClassRoot() {
                 setMeetingUrl(`/meeting.html?${params.toString()}`);
                 setMeetingStatus("ready_to_join");
 
+                // Phase 4 — iframe mounting, Zoom SDK about to load
+                await advance(4);
+
             } catch (err: any) {
                 console.error("Zoom preparation error:", err);
                 setMeetingStatus("error");
@@ -146,6 +194,49 @@ export default function SingleLiveClassRoot() {
         if (liveClassData) checkStatusAndPrepare();
 
     }, [liveClassData, isLoadingLiveClass, zoomAccountsData, isLoadingZoomAccounts, generateSignature, user, courseId]);
+
+    // Iframe → parent message bridge. Listens for stage events posted by /meeting.html.
+    useEffect(() => {
+        const handler = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+            const data = event.data;
+            if (!data || typeof data !== "object" || data.type !== "udaan_zoom") return;
+
+            if (data.stage === "audio_connecting") {
+                setJoinPhase((curr) => (curr < 5 ? 5 : curr));
+            } else if (data.stage === "joined") {
+                setJoinPhase((curr) => (curr < 6 ? 6 : curr));
+            }
+        };
+
+        window.addEventListener("message", handler);
+        return () => window.removeEventListener("message", handler);
+    }, []);
+
+    // Watchdog: if the iframe never posts back (older browser, SDK silently failed,
+    // CDN slow), advance phases anyway so the overlay can clear and reveal whatever
+    // the iframe is doing. Started once when phase first reaches 4. Timers live in a
+    // ref so re-running this effect on subsequent phase changes (via postMessage)
+    // does NOT clear them — cleanup only fires on unmount via the effect below.
+    useEffect(() => {
+        if (joinPhase < 4 || watchdogStartedRef.current) return;
+        watchdogStartedRef.current = true;
+
+        watchdogTimersRef.current.t5 = setTimeout(() => {
+            setJoinPhase((curr) => (curr < 5 ? 5 : curr));
+        }, PHASE_4_TO_5_WATCHDOG_MS);
+
+        watchdogTimersRef.current.t6 = setTimeout(() => {
+            setJoinPhase((curr) => (curr < 6 ? 6 : curr));
+        }, PHASE_TO_6_WATCHDOG_MS);
+    }, [joinPhase]);
+
+    useEffect(() => {
+        return () => {
+            if (watchdogTimersRef.current.t5) clearTimeout(watchdogTimersRef.current.t5);
+            if (watchdogTimersRef.current.t6) clearTimeout(watchdogTimersRef.current.t6);
+        };
+    }, []);
 
 
     const handleClose = () => {
@@ -178,30 +269,14 @@ export default function SingleLiveClassRoot() {
     };
 
 
-    // Loading State: Initial fetch or Zoom signature generation
+    // Loading + signature stages — full-screen JoinProgress only (iframe not mounted yet)
     if (meetingStatus === "initial_loading" || meetingStatus === "preparing_zoom") {
         return (
-            <Box sx={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "background.default",
-                zIndex: 1000,
-            }}>
-                <CircularProgress size={60} thickness={4} />
-                <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
-                    {meetingStatus === "initial_loading" ? "Fetching Live Class Data..." : "Preparing Zoom Session..."}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Please wait while we connect you
-                </Typography>
-            </Box>
+            <JoinProgress
+                phase={joinPhase}
+                liveClass={liveClassData?.data}
+                onCancel={handleClose}
+            />
         );
     }
 
@@ -394,8 +469,16 @@ export default function SingleLiveClassRoot() {
                         title="Zoom Class"
                     />
                 )}
-                <WaterMark />
+                {joinPhase >= 6 && <WaterMark />}
             </Box>
+
+            {joinPhase < 6 && (
+                <JoinProgress
+                    phase={joinPhase}
+                    liveClass={liveClassData?.data}
+                    onCancel={handleClose}
+                />
+            )}
         </>
 
     );

@@ -22,6 +22,8 @@ export interface RegisterUserProps {
 	password?: string;
 	password_confirmation?: string;
 	designation?: string;
+	live_preview?: File | null;
+	live_preview_url?: string;
 }
 
 export const RegisterUserInitialData: RegisterUserProps = {
@@ -37,6 +39,8 @@ export const RegisterUserInitialData: RegisterUserProps = {
 	thumbnail: null,
 	thumbnail_url: "",
 	designation: "",
+	live_preview: null,
+	live_preview_url: "",
 }
 
 export interface LoginUserProps {

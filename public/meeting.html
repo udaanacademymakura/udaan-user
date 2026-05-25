@@ -61,6 +61,7 @@
                 // isSupportChat: false,
                 audioPanelAlwaysOpen: false,
                 success: function () {
+                    try { parent.postMessage({ type: 'udaan_zoom', stage: 'audio_connecting' }, '*'); } catch (e) {}
                     const joinConfig = {
                         meetingNumber: meetingConfig.mn,
                         userName: meetingConfig.name,
@@ -71,6 +72,7 @@
                             ZoomMtg.mute({
                                 mute: true
                             });
+                            try { parent.postMessage({ type: 'udaan_zoom', stage: 'joined' }, '*'); } catch (e) {}
                             const style = document.createElement('style');
 
                             style.innerHTML = `

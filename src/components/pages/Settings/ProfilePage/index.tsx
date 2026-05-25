@@ -77,6 +77,8 @@ export default function ProfilePageRoot() {
             city: user?.city || "",
             thumbnail: null,
             thumbnail_url: user?.thumbnail_url || "",
+            live_preview: null,
+            live_preview_url: user?.live_preview_url || "",
         },
         enableReinitialize: true,
         validationSchema,
@@ -112,6 +114,14 @@ export default function ProfilePageRoot() {
                 if (values.thumbnail_url) {
                     formData.append("thumbnail_url", values.thumbnail_url);
                 }
+
+                if (values.live_preview instanceof File) {
+                    formData.append("live_preview", values.live_preview);
+                }
+                if (values.live_preview_url) {
+                    formData.append("live_preview_url", values.live_preview_url);
+                }
+
                 const response = await updateProfile(formData).unwrap();
                 dispatch(setCredentials({
                     token: token,
@@ -172,6 +182,10 @@ export default function ProfilePageRoot() {
         { label: "Female", value: "female" },
         { label: "Other", value: "other" }
     ]
+
+    const hasLiveClassPermission = Boolean(
+        user?.permissions?.some((p) => typeof p === "string" && p.includes("live_class"))
+    );
 
     const Provinces = [
         { label: "Province 1", value: "province_1" },
@@ -368,6 +382,31 @@ export default function ProfilePageRoot() {
                         </div>
                     </div>
                 </div>
+
+                {hasLiveClassPermission && (
+                    <>
+                        <Divider className="my-6!" />
+                        <div className="flex flex-col md:grid md:grid-cols-12 gap-4 lg:gap-6 items-start">
+                            <div className="md:col-span-3 2xl:col-span-2">
+                                <InputLabel>Live Preview Image</InputLabel>
+                                <ProfileImageUpload
+                                    previewUrl={formik.values.live_preview_url}
+                                    onChange={(file) => formik.setFieldValue("live_preview", file)}
+                                />
+                            </div>
+                            <div className="col-span-9 lg:col-span-10">
+                                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                                    Shown when you appear as a teacher in live class cards
+                                </Typography>
+                                <Typography variant="caption" color="text.middle">
+                                    Upload an image students will see beside your live class. A recent, well-lit photo (600×600 or larger) works best.
+                                    If left empty, your profile picture is used.
+                                </Typography>
+                            </div>
+                        </div>
+                    </>
+                )}
+
                 <Divider className="my-6!" />
                 <div className="text-right">
                     <Button variant="contained" type="submit" color="primary" disabled={isLoading}>{isLoading ? "Updating Profile" : "Update Profile"}</Button>

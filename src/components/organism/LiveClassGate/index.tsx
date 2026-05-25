@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { matchPath, useLocation } from "react-router-dom";
 import { useGetAllLiveClassesQuery } from "../../../services/liveApi";
 import type { LiveClassProps } from "../../../types/liveClass";
 import DashboardSkeleton from "./DashboardSkeleton";
@@ -6,20 +7,31 @@ import OngoingLiveOverlay from "./OngoingLiveOverlay";
 
 const PAGE_SIZE = 6;
 
+const BYPASS_PATTERNS = [
+    "/auth/set-password",
+    "/courses/:courseId/live/:liveId",
+];
+
 interface Props {
     children: React.ReactNode;
 }
 
 export default function LiveClassGate({ children }: Props) {
+    const location = useLocation();
+    const shouldBypass = BYPASS_PATTERNS.some((p) => matchPath(p, location.pathname));
+
     const [dismissed, setDismissed] = useState(false);
     const [pageIndex, setPageIndex] = useState(1);
     const [items, setItems] = useState<LiveClassProps[]>([]);
 
-    const { data, isLoading, isFetching } = useGetAllLiveClassesQuery({
-        pageIndex,
-        pageSize: PAGE_SIZE,
-        type: "ongoing",
-    });
+    const { data, isLoading, isFetching } = useGetAllLiveClassesQuery(
+        {
+            pageIndex,
+            pageSize: PAGE_SIZE,
+            type: "ongoing",
+        },
+        { skip: shouldBypass }
+    );
 
     const page = data?.data?.data ?? [];
     const totalCount = data?.data?.pagination?.total ?? 0;
@@ -45,10 +57,10 @@ export default function LiveClassGate({ children }: Props) {
         setPageIndex((p) => p + 1);
     };
 
+    if (shouldBypass) return <>{children}</>;
     if (dismissed) return <>{children}</>;
 
-    // Still checking — render the page skeleton only, no overlay, so users with
-    // no live class don't realize we're polling for one.
+
     if (isLoading) {
         return (
             <div className="relative h-full">

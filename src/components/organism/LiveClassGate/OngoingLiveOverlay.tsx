@@ -7,11 +7,11 @@ import {
     useTheme,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { CloseCircle, VideoSquare } from "iconsax-reactjs";
-import { useState } from "react";
+import { CloseCircle } from "iconsax-reactjs";
 import type { MouseEvent } from "react";
+import { useState } from "react";
 import type { LiveClassProps } from "../../../types/liveClass";
-import OngoingLiveRow from "./OngoingLiveRow";
+import LiveClassCard from "../Cards/LiveClassCard";
 
 interface Props {
     loading: boolean;
@@ -56,10 +56,10 @@ export default function OngoingLiveOverlay({
                 px: { xs: 1.5, sm: 2 },
                 py: 2,
                 background: isDark
-                    ? `linear-gradient(135deg, ${alpha(theme.palette.background.default, 0.82)}, ${alpha(theme.palette.primary.main, 0.2)})`
-                    : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.66)}, ${alpha(theme.palette.primary.contrastText, 0.84)})`,
-                backdropFilter: "blur(18px) saturate(150%)",
-                WebkitBackdropFilter: "blur(18px) saturate(150%)",
+                    ? `linear-gradient(135deg, ${alpha(theme.palette.background.default, 0.45)}, ${alpha(theme.palette.primary.main, 0.18)})`
+                    : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.28)}, ${alpha(theme.palette.primary.contrastText, 0.3)})`,
+                backdropFilter: "blur(4px) saturate(120%)",
+                WebkitBackdropFilter: "blur(4px) saturate(120%)",
             }}
         >
             <Box
@@ -105,7 +105,7 @@ export default function OngoingLiveOverlay({
                     }}
                 >
                     <Box sx={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
-                        <Box
+                        {/* <Box
                             sx={{
                                 width: 42,
                                 height: 42,
@@ -128,7 +128,7 @@ export default function OngoingLiveOverlay({
                             }}
                         >
                             <VideoSquare size={22} variant="Bold" />
-                        </Box>
+                        </Box> */}
                         <Box sx={{ minWidth: 0 }}>
                             <Typography
                                 sx={{
@@ -187,7 +187,11 @@ export default function OngoingLiveOverlay({
                     ) : (
                         <>
                             {items.map((item) => (
-                                <OngoingLiveRow key={item.id} data={item} onJoin={onDismiss} />
+                                <LiveClassCard
+                                    key={item.id}
+                                    data={item}
+                                    courseId={item.courses?.[0] ?? item.course_id}
+                                />
                             ))}
 
                             {canLoadMore && (
@@ -219,7 +223,7 @@ export default function OngoingLiveOverlay({
                     )}
                 </Box>
 
-                <Box
+                {/* <Box
                     sx={{
                         padding: "12px 20px 16px",
                         borderTop: `1px solid ${alpha(theme.palette.separator.dark, 0.75)}`,
@@ -241,7 +245,7 @@ export default function OngoingLiveOverlay({
                     >
                         Continue to dashboard
                     </Button>
-                </Box>
+                </Box> */}
             </Box>
         </Box>
     );

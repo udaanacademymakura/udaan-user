@@ -36,6 +36,7 @@ export interface LiveClassProps {
         name: string;
         thumbnail_url: string | null;
         role: string;
+        live_preview_url?: string | null;
     }>;
     teacher_ids: number[];
     is_enable_recording: 0 | 1;

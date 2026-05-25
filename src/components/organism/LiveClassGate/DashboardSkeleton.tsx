@@ -17,11 +17,11 @@ export default function DashboardSkeleton() {
         >
             <Box
                 className="flex flex-col xl:grid xl:grid-cols-12"
-                sx={{ gap: "18px", alignItems: "start", pb: 4 }}
+                sx={{ gap: "18px", alignItems: "stretch", pb: 4, width: "100%" }}
             >
                 <Box
                     className="xl:col-span-8"
-                    sx={{ display: "flex", flexDirection: "column", gap: "18px", overflow: "hidden" }}
+                    sx={{ display: "flex", flexDirection: "column", gap: "18px", overflow: "hidden", width: "100%", minWidth: 0 }}
                 >
                     <Skeleton variant="rounded" height={180} sx={{ borderRadius: "14px" }} />
 
@@ -73,7 +73,7 @@ export default function DashboardSkeleton() {
 
                 <Box
                     className="xl:col-span-4 w-full"
-                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                    sx={{ display: "flex", flexDirection: "column", gap: 2, width: "100%", minWidth: 0 }}
                 >
                     <Box sx={cardSx(border)}>
                         <Skeleton variant="text" width={120} height={24} />
