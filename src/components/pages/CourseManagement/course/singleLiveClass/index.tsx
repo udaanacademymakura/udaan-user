@@ -9,13 +9,13 @@ import {
 import { Maximize2 } from "iconsax-reactjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import JoinProgress from "../../../../organism/JoinProgress";
 import { PATH } from "../../../../../routes/PATH";
 import { useGetMeetingSignatureMutation, useGetSingleLiveClassQuery } from "../../../../../services/courseApi";
 import { useGetZoomAccountsQuery } from "../../../../../services/liveApi";
 import { useAppSelector } from "../../../../../store/hook";
 import { renderHtml } from "../../../../../utils/renderHtml";
 import WaterMark from "../../../../../Watermark";
+import JoinProgress from "../../../../organism/JoinProgress";
 
 type MeetingStatus =
     | "initial_loading"
@@ -27,13 +27,13 @@ type MeetingStatus =
 
 const MIN_PHASE_MS = 450;
 const CONGESTION_WINDOW_MS = 2 * 60 * 1000;
-const PHASE_4_TO_5_WATCHDOG_MS = 3500;
-const PHASE_TO_6_WATCHDOG_MS = 7000;
 const STUDENTS_PER_LEVEL = 40;
 const SIGNATURE_LEVEL_DELAY_MS = 650;
 const MEETING_LAUNCH_LEVEL_DELAY_MS = 450;
-// Hard ceiling so no user ever waits longer than this regardless of class size.
 const MAX_LEVEL_DELAY_MS = 30_000;
+// Per-watchdog-phase budget: at most 5 s each, at least 1 s each.
+const MAX_PHASE_WATCHDOG_MS = 5_000;
+const MIN_PHASE_WATCHDOG_MS = 1_000;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -73,7 +73,9 @@ export default function SingleLiveClassRoot() {
     const [meetingUrl, setMeetingUrl] = useState<string | null>(null);
     const [_isSignatureLoading, setIsSignatureLoading] = useState(false);
     const [joinPhase, setJoinPhase] = useState<number>(1);
+    const [retryCountdown, setRetryCountdown] = useState(0);
     const watchdogStartedRef = useRef(false);
+    const processStartTimeRef = useRef<number>(0);
     const watchdogTimersRef = useRef<{
         t5?: ReturnType<typeof setTimeout>;
         t6?: ReturnType<typeof setTimeout>;
@@ -147,6 +149,7 @@ export default function SingleLiveClassRoot() {
             }
 
             try {
+                processStartTimeRef.current = Date.now();
                 // Phase 2 — basic gates passed, now preparing
                 await advance(2);
 
@@ -220,6 +223,7 @@ export default function SingleLiveClassRoot() {
                 console.error("Zoom preparation error:", err);
                 setMeetingStatus("error");
                 setError(err.message || "An unknown error occurred during meeting preparation.");
+                setRetryCountdown(3);
             } finally {
                 setIsSignatureLoading(false);
             }
@@ -248,22 +252,35 @@ export default function SingleLiveClassRoot() {
         return () => window.removeEventListener("message", handler);
     }, []);
 
-    // Watchdog: if the iframe never posts back (older browser, SDK silently failed,
-    // CDN slow), advance phases anyway so the overlay can clear and reveal whatever
-    // the iframe is doing. Started once when phase first reaches 4. Timers live in a
-    // ref so re-running this effect on subsequent phase changes (via postMessage)
-    // does NOT clear them — cleanup only fires on unmount via the effect below.
+    // Countdown effect: ticks retryCountdown down to 0 after an error.
+    useEffect(() => {
+        if (retryCountdown <= 0) return;
+        const t = setTimeout(() => setRetryCountdown((c) => c - 1), 1_000);
+        return () => clearTimeout(t);
+    }, [retryCountdown]);
+
+    // Watchdog: fallback in case the iframe never posts back (old browser, silent SDK failure,
+    // CDN slow). Started once when phase reaches 4. Timers live in a ref so phase-change
+    // re-runs do NOT clear them — cleanup only on unmount.
+    //
+    // Timing is budget-based: total budget is MAX_LEVEL_DELAY_MS. Whatever the early phases
+    // already consumed is subtracted, and the remainder is split evenly across two intervals
+    // (4→5 and 5→6), clamped to [MIN_PHASE_WATCHDOG_MS, MAX_PHASE_WATCHDOG_MS] each.
     useEffect(() => {
         if (joinPhase < 4 || watchdogStartedRef.current) return;
         watchdogStartedRef.current = true;
 
+        const elapsed = processStartTimeRef.current > 0 ? Date.now() - processStartTimeRef.current : 0;
+        const remaining = Math.max(MIN_PHASE_WATCHDOG_MS * 2, MAX_LEVEL_DELAY_MS - elapsed);
+        const phaseMs = Math.min(MAX_PHASE_WATCHDOG_MS, Math.max(MIN_PHASE_WATCHDOG_MS, Math.round(remaining / 3)));
+
         watchdogTimersRef.current.t5 = setTimeout(() => {
             setJoinPhase((curr) => (curr < 5 ? 5 : curr));
-        }, PHASE_4_TO_5_WATCHDOG_MS);
+        }, phaseMs);
 
         watchdogTimersRef.current.t6 = setTimeout(() => {
             setJoinPhase((curr) => (curr < 6 ? 6 : curr));
-        }, PHASE_TO_6_WATCHDOG_MS);
+        }, phaseMs * 2);
     }, [joinPhase]);
 
     useEffect(() => {
@@ -283,6 +300,10 @@ export default function SingleLiveClassRoot() {
     const handleRetry = () => {
         setMeetingStatus("initial_loading");
         setError(null);
+        setJoinPhase(1);
+        setRetryCountdown(0);
+        watchdogStartedRef.current = false;
+        processStartTimeRef.current = 0;
     };
 
     // ------------------ JSX for Status Screens ------------------
@@ -449,8 +470,13 @@ export default function SingleLiveClassRoot() {
                     <Button variant="outlined" onClick={handleClose} size="large">
                         Close
                     </Button>
-                    <Button variant="contained" onClick={handleRetry} size="large">
-                        Try Again
+                    <Button
+                        variant="contained"
+                        onClick={handleRetry}
+                        size="large"
+                        disabled={retryCountdown > 0}
+                    >
+                        {retryCountdown > 0 ? `Try Again (${retryCountdown}s)` : "Try Again"}
                     </Button>
                 </Box>
             </Box>
