@@ -30,14 +30,15 @@ const CONGESTION_WINDOW_MS = 2 * 60 * 1000;
 const PHASE_4_TO_5_WATCHDOG_MS = 3500;
 const PHASE_TO_6_WATCHDOG_MS = 7000;
 const STUDENTS_PER_LEVEL = 40;
-const MAX_JOIN_LEVELS = 30;
 const SIGNATURE_LEVEL_DELAY_MS = 650;
 const MEETING_LAUNCH_LEVEL_DELAY_MS = 450;
+// Hard ceiling so no user ever waits longer than this regardless of class size.
+const MAX_LEVEL_DELAY_MS = 30_000;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 function computeLevelCount(students: number): number {
-    return Math.min(MAX_JOIN_LEVELS, Math.max(1, Math.ceil(students / STUDENTS_PER_LEVEL)));
+    return Math.max(1, Math.ceil(students / STUDENTS_PER_LEVEL));
 }
 
 function joinJitterMs(userId: number | string | undefined, maxMs: number): number {
@@ -179,7 +180,7 @@ export default function SingleLiveClassRoot() {
                     if (jitter > 0) await sleep(jitter);
                 }
 
-                const signatureLevelDelay = joinLevel * SIGNATURE_LEVEL_DELAY_MS;
+                const signatureLevelDelay = Math.min(joinLevel * SIGNATURE_LEVEL_DELAY_MS, MAX_LEVEL_DELAY_MS);
                 if (signatureLevelDelay > 0) await sleep(signatureLevelDelay);
 
                 const sigRes = await generateSignature({
@@ -208,7 +209,7 @@ export default function SingleLiveClassRoot() {
 
                 setMeetingUrl(`/meeting.html?${params.toString()}`);
 
-                const meetingLaunchDelay = joinLevel * MEETING_LAUNCH_LEVEL_DELAY_MS;
+                const meetingLaunchDelay = Math.min(joinLevel * MEETING_LAUNCH_LEVEL_DELAY_MS, MAX_LEVEL_DELAY_MS);
                 if (meetingLaunchDelay > 0) await sleep(meetingLaunchDelay);
 
                 // Phase 4 — iframe mounting, Zoom SDK about to load
