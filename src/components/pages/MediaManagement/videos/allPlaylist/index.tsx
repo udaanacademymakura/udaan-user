@@ -127,7 +127,7 @@ export default function CoursePlaylist() {
 
             <div className="h-full overflow-auto">
                 {playlist && playlist?.data?.data?.length > 0 ? (
-                    <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
+                    <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
                         {playlist?.data?.data?.map((item) => (
                             <PlaylistCard data={item} key={item.chapter_id} courseId={selectedCourse?.id} />
                         ))}

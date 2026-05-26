@@ -78,13 +78,10 @@ export default function AllNoteList() {
     const totalPages = notes?.data?.pagination?.total_pages || 0;
     const currentPage = qpNotes.pageIndex;
 
-    // ✅ Simplified effect - let RTK Query cache handle the data
     useEffect(() => {
         if (qpNotes.pageIndex === 1) {
-            // First page - replace all notes
             setAllNotes(notesList);
         } else if (notesList.length > 0) {
-            // Subsequent pages - append new notes
             setAllNotes(prev => {
                 const existingIds = new Set(prev.map(v => v.id));
                 const newNotes = notesList.filter(v => !existingIds.has(v.id));
@@ -93,17 +90,14 @@ export default function AllNoteList() {
         }
     }, [notesList, qpNotes.pageIndex]);
 
-    // ✅ Reset pagination when course changes - don't clear allNotes
+
     useEffect(() => {
         setQpNotes(prev => ({ ...prev, pageIndex: 1 }));
-        // Let the notesList effect handle updating allNotes
     }, [selectedCourseId]);
 
-    // ✅ Reset pagination when search changes - don't clear allNotes
     useEffect(() => {
         const timer = setTimeout(() => {
             setQpNotes(prev => ({ ...prev, search, pageIndex: 1 }));
-            // Let the notesList effect handle updating allNotes
         }, 500);
 
         return () => clearTimeout(timer);
@@ -120,7 +114,6 @@ export default function AllNoteList() {
 
     const hasMore = currentPage < totalPages;
 
-    // ✅ Show loading skeleton only when actually loading first page with no notes
     const isLoadingFirstPage = (loadingNotes || isFetching) && qpNotes.pageIndex === 1 && allNotes.length === 0;
 
     if (isLoading) {
@@ -193,7 +186,7 @@ export default function AllNoteList() {
                                 </div>
                             }
                         >
-                                <div className="flex flex-col gap-4 md:grid grid-cols-2 xl:grid-cols-3  3xl:grid-cols-4 lg:gap-6">
+                            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-3  3xl:grid-cols-4 lg:gap-6">
                                 {allNotes.map((media) => (
                                     <MediaCard
                                         media={media}

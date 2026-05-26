@@ -60,10 +60,10 @@ export default function LinkController({ options = [] }: LinkControllerProps) {
                             <div
                                 key={tab.value}
                                 onClick={() => navigate(tab.value)}
-                                className={isActive ? "active__tab__controller" : ""}
+                                className={` rounded-sm ${isActive ? "active__tab__controller" : ""}`}
                             >
                                 <div className={
-                                    `px-6 py-2 rounded-md cursor-pointer flex  items-center gap-1.5 ${isActive ? "active__tab__controller" : ""}`
+                                    `px-6 py-2 cursor-pointer flex  items-center gap-1.5`
                                 }>
                                     <Typography
                                         variant="subtitle2"
@@ -98,7 +98,7 @@ export default function LinkController({ options = [] }: LinkControllerProps) {
 
                         >
                             <div className={
-                                `px-6 py-2 rounded-md cursor-pointer flex  items-center gap-1.5 ${isActive ? "active__tab__controller" : ""}`
+                                `px-6 py-2 rounded-sm cursor-pointer flex  items-center gap-1.5 ${isActive ? "active__tab__controller" : ""}`
                             }>
                                 <Typography
                                     variant="subtitle2"

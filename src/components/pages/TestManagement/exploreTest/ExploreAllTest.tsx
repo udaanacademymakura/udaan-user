@@ -23,7 +23,7 @@ export default function ExploreAllTest() {
             </div>
             <div className="explore_all__test__root h-full overflow-auto pt-4 pr-2">
                 {data && data?.data?.data?.length > 0 ? <>
-                    <div className="flex flex-col gap-4 md:grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 lg:gap-4 ">
+                    <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 lg:gap-4 ">
                         {data?.data?.data?.map((test) => (
                             <ExploreTestCard
                                 test={test}

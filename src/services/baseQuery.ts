@@ -39,7 +39,6 @@ function collectHardwareSignals(): string {
 	return [screen_res, timezone, cpu_cores, memory, platform, webgl_vendor, webgl_renderer].join("|");
 }
 
-// FNV-1a 32-bit hash — fast, no external dependency, good distribution
 function fnv1a(str: string): string {
 	let hash = 2166136261;
 	for (let i = 0; i < str.length; i++) {

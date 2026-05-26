@@ -32,7 +32,15 @@ function avatarBgColor(seed: string, theme: Theme): string {
     return palette[Math.abs(h) % palette.length];
 }
 
-export default function LiveClassCard({ data, courseId }: { data: LiveClassProps; courseId?: number }) {
+export default function LiveClassCard({
+    data,
+    courseId,
+    joinLevel,
+}: {
+    data: LiveClassProps;
+    courseId?: number;
+    joinLevel?: number;
+}) {
     const theme = useTheme();
     const { id } = useParams();
     const navigate = useNavigate();
@@ -46,7 +54,8 @@ export default function LiveClassCard({ data, courseId }: { data: LiveClassProps
     const startTimeLabel = getTime(data.start_time);
 
     const handleJoinClass = () => {
-        navigate(PATH.COURSE_MANAGEMENT.COURSES.JOIN_LIVE.ROOT(Number(courseId ? courseId : id), Number(data?.id)));
+        const path = PATH.COURSE_MANAGEMENT.COURSES.JOIN_LIVE.ROOT(Number(courseId ? courseId : id), Number(data?.id));
+        navigate(joinLevel === undefined ? path : `${path}?level=${joinLevel}`);
     };
 
     const variant = statusVariantMap[data?.status] ?? "info";

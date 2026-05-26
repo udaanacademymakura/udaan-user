@@ -98,11 +98,11 @@ export default function CustomAppbar({
                             <Typography
                                 className="w-full"
                                 sx={{
-                                    typography: { xs: "overline", sm: "body1" },
+                                    typography: { xs: "overline", sm: "subtitle2", md: "body1" },
                                     display: "flex",
                                     flexDirection: "column",
                                     lineHeight: 1.3,
-                                    fontWeight: { xs: 700, sm: 700 },
+                                    fontWeight: { xs: 700, sm: 700, md: 600 },
                                 }}
                             >
                                 <span>
@@ -112,7 +112,7 @@ export default function CustomAppbar({
                                     </Box>
                                 </span>
                             </Typography>
-                            <Typography variant="subtitle2" className="mt-1! hidden md:block" fontWeight={400} sx={{ opacity: 0.85 }}>
+                            <Typography variant="subtitle2" className="mt-1! hidden sm:block" fontWeight={400} sx={{ opacity: 0.85 }}>
                                 {getGreetingKey(user?.dob as string) === "messages.birthday"
                                     ? "Wishing you a wonderful day filled with joy!"
                                     : "You're making great progress. Keep exploring!"}

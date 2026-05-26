@@ -7,8 +7,8 @@ import {
     Typography,
 } from "@mui/material";
 import { Maximize2 } from "iconsax-reactjs";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import JoinProgress from "../../../../organism/JoinProgress";
 import { PATH } from "../../../../../routes/PATH";
 import { useGetMeetingSignatureMutation, useGetSingleLiveClassQuery } from "../../../../../services/courseApi";
@@ -29,8 +29,16 @@ const MIN_PHASE_MS = 450;
 const CONGESTION_WINDOW_MS = 2 * 60 * 1000;
 const PHASE_4_TO_5_WATCHDOG_MS = 3500;
 const PHASE_TO_6_WATCHDOG_MS = 7000;
+const STUDENTS_PER_LEVEL = 40;
+const MAX_JOIN_LEVELS = 30;
+const SIGNATURE_LEVEL_DELAY_MS = 650;
+const MEETING_LAUNCH_LEVEL_DELAY_MS = 450;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+function computeLevelCount(students: number): number {
+    return Math.min(MAX_JOIN_LEVELS, Math.max(1, Math.ceil(students / STUDENTS_PER_LEVEL)));
+}
 
 function joinJitterMs(userId: number | string | undefined, maxMs: number): number {
     if (!userId || maxMs <= 0) return 0;
@@ -40,9 +48,23 @@ function joinJitterMs(userId: number | string | undefined, maxMs: number): numbe
     return Math.abs(h) % maxMs;
 }
 
+function userJoinLevel(userId: number | string | undefined, liveId: number | string | undefined, levelCount: number): number {
+    const seed = `${userId ?? "guest"}:${liveId ?? "live"}`;
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = ((h * 31) + seed.charCodeAt(i)) | 0;
+    return Math.abs(h) % levelCount;
+}
+
+function normalizeJoinLevel(value: string | null, fallback: number, levelCount: number): number {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.max(0, Math.min(levelCount - 1, Math.floor(parsed)));
+}
+
 export default function SingleLiveClassRoot() {
     const { courseId, liveId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const user = useAppSelector((state) => state.auth.user);
 
     const [meetingStatus, setMeetingStatus] = useState<MeetingStatus>("initial_loading");
@@ -67,6 +89,12 @@ export default function SingleLiveClassRoot() {
 
     const [generateSignature] = useGetMeetingSignatureMutation();
 
+    const joinLevel = useMemo(() => {
+        const students = liveClassData?.data?.active_students ?? 0;
+        const levelCount = computeLevelCount(students);
+        const fallback = userJoinLevel(user?.id, liveId, levelCount);
+        return normalizeJoinLevel(new URLSearchParams(location.search).get("level"), fallback, levelCount);
+    }, [location.search, liveId, user?.id, liveClassData]);
 
     const formatMeetingTime = (time: string | undefined) => {
         if (!time) return "";
@@ -151,6 +179,9 @@ export default function SingleLiveClassRoot() {
                     if (jitter > 0) await sleep(jitter);
                 }
 
+                const signatureLevelDelay = joinLevel * SIGNATURE_LEVEL_DELAY_MS;
+                if (signatureLevelDelay > 0) await sleep(signatureLevelDelay);
+
                 const sigRes = await generateSignature({
                     meeting_id: Number(meetingNumber),
                     account_id: Number(meetingData?.account_id),
@@ -176,10 +207,13 @@ export default function SingleLiveClassRoot() {
                 });
 
                 setMeetingUrl(`/meeting.html?${params.toString()}`);
-                setMeetingStatus("ready_to_join");
+
+                const meetingLaunchDelay = joinLevel * MEETING_LAUNCH_LEVEL_DELAY_MS;
+                if (meetingLaunchDelay > 0) await sleep(meetingLaunchDelay);
 
                 // Phase 4 — iframe mounting, Zoom SDK about to load
                 await advance(4);
+                setMeetingStatus("ready_to_join");
 
             } catch (err: any) {
                 console.error("Zoom preparation error:", err);
@@ -193,7 +227,7 @@ export default function SingleLiveClassRoot() {
 
         if (liveClassData) checkStatusAndPrepare();
 
-    }, [liveClassData, isLoadingLiveClass, zoomAccountsData, isLoadingZoomAccounts, generateSignature, user, courseId]);
+    }, [liveClassData, isLoadingLiveClass, zoomAccountsData, isLoadingZoomAccounts, generateSignature, user, courseId, joinLevel]);
 
     // Iframe → parent message bridge. Listens for stage events posted by /meeting.html.
     useEffect(() => {

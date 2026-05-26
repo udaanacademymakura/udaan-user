@@ -239,4 +239,7 @@ export const PATH = {
             ROOT: "/tickets/ticket-types",
         },
     },
+    ONGOING_LIVE_CLASSES: {
+        ROOT: "/ongoing-live-classes",
+    },
 };

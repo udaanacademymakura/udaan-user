@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { PATH } from "../../../../routes/PATH";
 import { useGetAllInterestQuery, useUpdateUserInterestMutation } from "../../../../services/categoryApi";
+import { useGetAllLiveClassesQuery } from "../../../../services/liveApi";
 import { showToast } from "../../../../slice/toastSlice";
 import { useAppDispatch, useAppSelector } from "../../../../store/hook";
 import { getItem, setItem } from "../../../../utils/localStorageUtil";
@@ -38,6 +39,16 @@ export default function InterestRoot() {
     const user = useAppSelector((state) => state.auth.user);
     const { data, isLoading } = useGetAllInterestQuery();
     const [updatedUserInterest, { isLoading: addingUserInterest }] = useUpdateUserInterestMutation();
+    const { data: liveData, isLoading: checkingLive } = useGetAllLiveClassesQuery({
+        pageIndex: 1,
+        pageSize: 1,
+        type: "ongoing",
+    });
+
+    const nextRoute =
+        !checkingLive && (liveData?.data?.pagination?.total ?? 0) > 0
+            ? PATH.ONGOING_LIVE_CLASSES.ROOT
+            : PATH.DASHBOARD.ROOT;
 
     const handleToggle = (id: number) => {
         setSelectedCategories((prev) =>
@@ -47,17 +58,20 @@ export default function InterestRoot() {
         );
     };
 
+    const loginState = { state: { from: "login" } };
+
     const skipInterest = () => {
         setItem(INTEREST_SELECTED_KEY, false);
-        navigate(PATH.DASHBOARD.ROOT);
+        navigate(nextRoute, loginState);
     };
 
     useEffect(() => {
+        if (checkingLive) return;
         const completed = getItem<boolean>(INTEREST_SELECTED_KEY);
         if (completed || user?.interested_categories?.length) {
-            navigate(PATH.DASHBOARD.ROOT);
+            navigate(nextRoute, { ...loginState, replace: true });
         }
-    }, [navigate]);
+    }, [checkingLive, nextRoute, navigate]);
 
     const submitInterest = async () => {
         if (selectedCategories.length === 0) {
@@ -70,7 +84,7 @@ export default function InterestRoot() {
                 categories: selectedCategories
             }).unwrap();
             setItem(INTEREST_SELECTED_KEY, true);
-            navigate(PATH.DASHBOARD.ROOT);
+            navigate(nextRoute, loginState);
         } catch (error: any) {
             dispatch(showToast({
                 message: error?.data?.message || "Unable to updated interest. Try Again Later."

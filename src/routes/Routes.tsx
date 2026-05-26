@@ -64,6 +64,7 @@ import DiscussionManagementRoot from "../components/pages/DiscussionManagement";
 import AllDiscussions from "../components/pages/DiscussionManagement/allDiscussions";
 import DiscussionForm from "../components/pages/DiscussionManagement/DiscussionForm";
 import DiscussionDetail from "../components/pages/DiscussionManagement/DiscussionDetail";
+import OngoingLiveClassesPage from "../components/pages/OngoingLiveClasses";
 import TicketManagementRoot from "../components/pages/TicketManagement";
 import AllTickets from "../components/pages/TicketManagement/allTickets";
 import TicketChats from "../components/pages/TicketManagement/chats";
@@ -320,6 +321,10 @@ const router = createBrowserRouter([
               { path: PATH.TICKET.CHATS.ROOT, element: <TicketChats /> },
               { path: PATH.TICKET.CHATS.DETAIL.ROOT(), element: <TicketChats /> },
             ],
+          },
+          {
+            path: PATH.ONGOING_LIVE_CLASSES.ROOT,
+            element: <OngoingLiveClassesPage />,
           },
         ]
       },

@@ -6,7 +6,6 @@ type Props = {
 
 const MOBILE_BREAKPOINT = 1200;
 
-// eslint-disable-next-line no-new-func
 const triggerDebugger = new Function('debugger');
 
 const ScreenProtection: React.FC<Props> = ({ children }) => {

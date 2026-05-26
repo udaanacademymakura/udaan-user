@@ -71,12 +71,9 @@ export default function TabController<T extends string | number>({
 
     const theme = useTheme();
 
-
-    console.log(options)
-
     return (
         <>
-            <Box className="p-1! rounded-md"
+            <Box className="p-1! rounded-md w-full"
                 sx={{
                     background: theme.palette.tab.background,
                     display: { xs: "block", lg: "none" }

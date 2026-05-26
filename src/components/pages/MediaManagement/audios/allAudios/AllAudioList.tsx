@@ -172,7 +172,7 @@ export default function AllAudioListing() {
                     className="h-full overflow-auto"
                 >
                     {isLoadingFirstPage ? (
-                        <div className="flex flex-col gap-4 md:grid grid-cols-2 xl:grid-cols-3 lg:gap-6">
+                        <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-3 lg:gap-6">
                             {[...Array(6)].map((_, idx) => (
                                 <VideoSkeleton key={idx} />
                             ))}
@@ -189,7 +189,7 @@ export default function AllAudioListing() {
                                 </div>
                             }
                         >
-                                <div className="flex flex-col gap-4 md:grid grid-cols-2 xl:grid-cols-3  3xl:grid-cols-4 lg:gap-6">
+                                <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-3  3xl:grid-cols-4 lg:gap-6">
                                 {allAudios.map((media) => (
                                     <MediaCard
                                         media={media}

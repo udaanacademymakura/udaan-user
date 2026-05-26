@@ -68,7 +68,7 @@ export default function AllGorkhapatras() {
                         <Box className="table__wrapper h-full" sx={{
                             overflow: "auto"
                         }}>
-                            <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                                 {gorkhapatras.map((gorkhapatra) => (
                                     <GorkhapatraCard
                                         data={gorkhapatra} key={gorkhapatra.title + gorkhapatra.id}

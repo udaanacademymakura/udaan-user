@@ -85,7 +85,7 @@ export default function ExploreBundle() {
                             </svg>
                         )}
                     /> : (
-                        <Box className="overflow-auto flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4  py-2">
+                        <Box className="overflow-auto flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4  py-2">
                             {bundles.map((item) => {
                                 let currentPlaceholderIndex = -1;
 

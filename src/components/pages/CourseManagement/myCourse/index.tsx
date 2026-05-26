@@ -34,7 +34,7 @@ export default function MyCourseRoot() {
                 }]}
             />
             <Box className="h-full overflow-auto">
-                <div className="mb-4 lg:mb-6 flex justify-between items-center
+                <div className="mb-4 lg:mb-6 flex justify-between items-center flex-col gap-3 sm:flex-row
                 ">
                     <TabController
                         options={[
@@ -46,6 +46,12 @@ export default function MyCourseRoot() {
                         setActiveTab={(value) => { setQp({ ...qp, pageIndex: 1 }); setActiveTab(value as any) }}
                     />
                     <OutlinedInput
+                        sx={{
+                            width: {
+                                xs: "100%",
+                                md: "auto",
+                            }
+                        }}
                         name="search"
                         placeholder="Enter Course Name"
                         size="small"

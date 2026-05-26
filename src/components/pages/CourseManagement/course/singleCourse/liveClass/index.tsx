@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { setPurchase } from "../../../../../../slice/purchaseSlice";
-import { useAppDispatch } from "../../../../../../store/hook";
+import { useAppDispatch, useAppSelector } from "../../../../../../store/hook";
 import type { QueryParams } from "../../../../../../types";
 import type { LiveClassList } from "../../../../../../types/liveClass";
 
@@ -27,9 +27,17 @@ export default function SingleCourseLiveClass({
   havePurchased = false,
 }: Props) {
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
   const { id } = useParams();
 
   const liveClasses = data?.data?.data ?? [];
+
+  const getJoinLevel = (liveClassId: number) => {
+    const seed = `${user?.id ?? "guest"}:${liveClassId}`;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i += 1) hash = ((hash * 31) + seed.charCodeAt(i)) | 0;
+    return Math.abs(hash) % 6;
+  };
 
   if (isLoading) {
     return <div className="text-center py-10">Loading live classes...</div>;
@@ -75,7 +83,7 @@ export default function SingleCourseLiveClass({
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {liveClasses.map((liveClass) => (
-            <LiveClassCard key={liveClass.id} data={liveClass} />
+            <LiveClassCard key={liveClass.id} data={liveClass} joinLevel={getJoinLevel(liveClass.id)} />
           ))}
         </div>
 
