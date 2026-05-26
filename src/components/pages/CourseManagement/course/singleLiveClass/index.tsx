@@ -73,6 +73,7 @@ export default function SingleLiveClassRoot() {
     const [meetingUrl, setMeetingUrl] = useState<string | null>(null);
     const [_isSignatureLoading, setIsSignatureLoading] = useState(false);
     const [joinPhase, setJoinPhase] = useState<number>(1);
+    const [retryCount, setRetryCount] = useState(0);
     const [retryCountdown, setRetryCountdown] = useState(0);
     const watchdogStartedRef = useRef(false);
     const processStartTimeRef = useRef<number>(0);
@@ -171,8 +172,6 @@ export default function SingleLiveClassRoot() {
                 if (!meetingNumber) throw new Error("Invalid Meeting URL in server data.");
                 if (!sdkKey) throw new Error("Zoom SDK Key not found for this account.");
 
-                // Load-smoothing jitter: only inside ±2 min of class start, scaled by class size.
-                // Keeps peak signature throughput at ~40 req/sec regardless of how many students hit Join.
                 const startMs = meetingStartTime?.getTime() ?? 0;
                 const inCongestionWindow =
                     startMs > 0 && Math.abs(Date.now() - startMs) < CONGESTION_WINDOW_MS;
@@ -232,7 +231,7 @@ export default function SingleLiveClassRoot() {
 
         if (liveClassData) checkStatusAndPrepare();
 
-    }, [liveClassData, isLoadingLiveClass, zoomAccountsData, isLoadingZoomAccounts, generateSignature, user, courseId, joinLevel]);
+    }, [liveClassData, isLoadingLiveClass, zoomAccountsData, isLoadingZoomAccounts, generateSignature, user, courseId, joinLevel, retryCount]);
 
     // Iframe → parent message bridge. Listens for stage events posted by /meeting.html.
     useEffect(() => {
@@ -304,6 +303,7 @@ export default function SingleLiveClassRoot() {
         setRetryCountdown(0);
         watchdogStartedRef.current = false;
         processStartTimeRef.current = 0;
+        setRetryCount((c) => c + 1);
     };
 
     // ------------------ JSX for Status Screens ------------------

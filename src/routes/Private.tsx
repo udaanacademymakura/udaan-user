@@ -11,12 +11,13 @@ export default function Private() {
     const location = useLocation();
 
     const isOnLiveClassPage = location.pathname === PATH.ONGOING_LIVE_CLASSES.ROOT;
+    const isJoiningLiveClass = /^\/courses\/[^/]+\/live\//.test(location.pathname);
     const dismissCount = parseInt(sessionStorage.getItem(LIVE_CLASS_DISMISSED_KEY) ?? "0", 10);
     const dismissed = dismissCount >= 5;
 
     const { data, isLoading } = useGetAllLiveClassesQuery(
         { pageIndex: 1, pageSize: 1, type: "ongoing" },
-        { skip: !user || dismissed || isOnLiveClassPage }
+        { skip: !user || dismissed || isOnLiveClassPage || isJoiningLiveClass }
     );
 
     if (!user) {
