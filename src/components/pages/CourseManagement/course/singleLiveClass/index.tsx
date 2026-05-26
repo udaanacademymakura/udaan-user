@@ -29,7 +29,6 @@ const MIN_PHASE_MS = 450;
 const CONGESTION_WINDOW_MS = 2 * 60 * 1000;
 const STUDENTS_PER_LEVEL = 40;
 const SIGNATURE_LEVEL_DELAY_MS = 650;
-const MEETING_LAUNCH_LEVEL_DELAY_MS = 450;
 const MAX_LEVEL_DELAY_MS = 30_000;
 // Per-watchdog-phase budget: at most 5 s each, at least 1 s each.
 const MAX_PHASE_WATCHDOG_MS = 5_000;
@@ -211,10 +210,6 @@ export default function SingleLiveClassRoot() {
 
                 setMeetingUrl(`/meeting.html?${params.toString()}`);
 
-                const meetingLaunchDelay = Math.min(joinLevel * MEETING_LAUNCH_LEVEL_DELAY_MS, MAX_LEVEL_DELAY_MS);
-                if (meetingLaunchDelay > 0) await sleep(meetingLaunchDelay);
-
-                // Phase 4 — iframe mounting, Zoom SDK about to load
                 await advance(4);
                 setMeetingStatus("ready_to_join");
 
@@ -227,7 +222,6 @@ export default function SingleLiveClassRoot() {
                 setIsSignatureLoading(false);
             }
         };
-
 
         if (liveClassData) checkStatusAndPrepare();
 

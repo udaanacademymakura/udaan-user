@@ -7,7 +7,7 @@ import { useGetAllLiveClassesQuery } from "../../../services/liveApi";
 import type { LiveClassProps } from "../../../types/liveClass";
 
 const PAGE_SIZE = 6;
-const LIVE_CLASS_DISMISSED_KEY = "live_class_dismissed";
+export const LIVE_CLASS_DISMISSED_KEY = "live_class_dismissed";
 
 export default function OngoingLiveClassesPage() {
     const navigate = useNavigate();
@@ -16,6 +16,11 @@ export default function OngoingLiveClassesPage() {
 
     const [pageIndex, setPageIndex] = useState(1);
     const [items, setItems] = useState<LiveClassProps[]>([]);
+
+    // Mark as dismissed on first mount so Private stops redirecting after one visit.
+    useEffect(() => {
+        sessionStorage.setItem(LIVE_CLASS_DISMISSED_KEY, "dismissed");
+    }, []);
 
     const { data, isLoading, isFetching } = useGetAllLiveClassesQuery({
         pageIndex,
@@ -45,10 +50,12 @@ export default function OngoingLiveClassesPage() {
         }
     }, [isLoading, totalCount, navigate]);
 
+    // Use current page as fallback until the accumulate-effect fires on remount.
+    const displayItems = items.length > 0 ? items : page;
+
     const handleDismiss = () => {
-        const current = parseInt(sessionStorage.getItem(LIVE_CLASS_DISMISSED_KEY) ?? "0", 10);
-        sessionStorage.setItem(LIVE_CLASS_DISMISSED_KEY, String(current + 1));
-        if (fromLogin) {
+        sessionStorage.setItem(LIVE_CLASS_DISMISSED_KEY, "dismissed");
+        if (fromLogin || window.history.length <= 1) {
             navigate(PATH.DASHBOARD.ROOT, { replace: true });
         } else {
             navigate(-1);
@@ -63,14 +70,14 @@ export default function OngoingLiveClassesPage() {
     return (
         <div className="relative h-full">
             <DashboardSkeleton />
-            {!isLoading && totalCount > 0 && (
+            {(isLoading || totalCount > 0) && (
                 <OngoingLiveOverlay
-                    loading={false}
-                    items={items}
+                    loading={isLoading}
+                    items={displayItems}
                     totalCount={totalCount}
                     onDismiss={handleDismiss}
                     onLoadMore={handleLoadMore}
-                    canLoadMore={items.length < totalCount}
+                    canLoadMore={displayItems.length < totalCount}
                     loadingMore={isFetching && pageIndex > 1}
                 />
             )}

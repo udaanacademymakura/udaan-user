@@ -12,8 +12,7 @@ export default function Private() {
 
     const isOnLiveClassPage = location.pathname === PATH.ONGOING_LIVE_CLASSES.ROOT;
     const isJoiningLiveClass = /^\/courses\/[^/]+\/live\//.test(location.pathname);
-    const dismissCount = parseInt(sessionStorage.getItem(LIVE_CLASS_DISMISSED_KEY) ?? "0", 10);
-    const dismissed = dismissCount >= 5;
+    const dismissed = sessionStorage.getItem(LIVE_CLASS_DISMISSED_KEY) === "dismissed";
 
     const { data, isLoading } = useGetAllLiveClassesQuery(
         { pageIndex: 1, pageSize: 1, type: "ongoing" },
