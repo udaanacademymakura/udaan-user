@@ -242,4 +242,10 @@ export const PATH = {
     ONGOING_LIVE_CLASSES: {
         ROOT: "/ongoing-live-classes",
     },
+    FREE_MATERIALS: {
+        ROOT: "/free-materials",
+        VIEW: {
+            ROOT: (id?: number) => id ? `/free-materials/${id}` : "/free-materials/:id",
+        },
+    },
 };

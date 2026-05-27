@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 import App from "../App";
 import AuthRoot from "../components/pages/auth";
 import Login from "../components/pages/auth/login";
@@ -65,6 +65,7 @@ import AllDiscussions from "../components/pages/DiscussionManagement/allDiscussi
 import DiscussionForm from "../components/pages/DiscussionManagement/DiscussionForm";
 import DiscussionDetail from "../components/pages/DiscussionManagement/DiscussionDetail";
 import OngoingLiveClassesPage from "../components/pages/OngoingLiveClasses";
+import FreeMaterials from "../components/pages/FreeMaterials";
 import TicketManagementRoot from "../components/pages/TicketManagement";
 import AllTickets from "../components/pages/TicketManagement/allTickets";
 import TicketChats from "../components/pages/TicketManagement/chats";
@@ -190,8 +191,10 @@ const router = createBrowserRouter([
               { path: PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.REVIEW_TEST.ROOT({}), element: <ReviewTestRoot /> },
               { path: PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.REVIEW_TEST.REVIEW_SUBJECTIVE_TEST.ROOT({}), element: <ReviewSubjectTestRoot /> },
               { path: PATH.COURSE_MANAGEMENT.COURSES.SAVED_COURSES.ROOT, element: <SavedCourse /> },
+              { path: PATH.FREE_MATERIALS.VIEW.ROOT(), element: <FreeMaterials /> },
             ],
           },
+          { path: PATH.FREE_MATERIALS.ROOT, element: <Navigate to={PATH.FREE_MATERIALS.VIEW.ROOT(Number(import.meta.env.VITE_FREE_MATERIALS_COURSE_ID))} replace /> },
 
           {
             element:

@@ -14,7 +14,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { AudioSquare, Book, Bookmark, Document, Element4, I24Support, Notepad2, Notification, Paperclip, PenAdd, SearchNormal, VideoOctagon, VideoPlay } from "iconsax-reactjs";
+import { AudioSquare, Book, Bookmark, Document, Element4, Gift, I24Support, Notepad2, Notification, Paperclip, PenAdd, SearchNormal, VideoOctagon, VideoPlay } from "iconsax-reactjs";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -173,6 +173,20 @@ export default function PrimaryMenu({ isCollapsed = false }: PrimaryMenuProps) {
                   <Bookmark size={20} />
                 </ListItemIcon>
                 {!isCollapsed && <ListItemText primary={t("menus.savedCourse")} />}
+              </ListItemButton>
+            </ListItem>
+          )}
+          {wrap("Free Materials",
+            <ListItem disablePadding className="menu__item">
+              <ListItemButton
+                onClick={() => navigate(PATH.FREE_MATERIALS.ROOT)}
+                className={isActive(PATH.FREE_MATERIALS.ROOT) ? "active" : ""}
+                sx={{ justifyContent: isCollapsed ? "center" : undefined }}
+              >
+                <ListItemIcon sx={{ minWidth: isCollapsed ? "unset" : undefined, justifyContent: "center" }}>
+                  <Gift size={20} />
+                </ListItemIcon>
+                {!isCollapsed && <ListItemText primary="Free Materials" />}
               </ListItemButton>
             </ListItem>
           )}
