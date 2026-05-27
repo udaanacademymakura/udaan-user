@@ -407,7 +407,7 @@ export default function LiveClassAndTestFilter() {
                         ) : (
                             <div className="flex flex-col gap-3 max-h-72 overflow-auto">
                                 {todayClasses.map((item) => (
-                                    <LiveClassCard key={item.id} data={item} courseId={item.course_id} />
+                                    <LiveClassCard key={item.id} data={item} courseId={Number(item.course_id)} />
                                 ))}
                             </div>
                         )}
