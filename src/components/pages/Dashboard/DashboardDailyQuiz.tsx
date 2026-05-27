@@ -38,7 +38,7 @@ function QuizOption({
 
     if (answered) {
         cursor = "default";
-        if (option.is_correct) {
+        if (option.correct_answer) {
             bg = theme.palette.success.light;
             border = `1.5px solid ${theme.palette.success.main}`;
             color = theme.palette.success.main;
@@ -362,7 +362,7 @@ export default function DashboardDailyQuiz() {
                         >
                             {selectedId !== null &&
                                 quiz.options.find((o) => o.id === selectedId)
-                                    ?.is_correct
+                                    ?.correct_answer
                                 ? "🎉 Correct! Come back tomorrow."
                                 : "Nice try! Come back tomorrow for the next one."}
                         </Typography>

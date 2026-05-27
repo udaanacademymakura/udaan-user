@@ -15,16 +15,16 @@ export interface AnalyticsList {
 export interface DailyQuizOption {
     id: number;
     option: string;
-    is_correct: boolean;
+    correct_answer: boolean;
 }
 
 export interface DailyQuizQuestion {
     id: number;
+    quiz_id: number;
     question: string;
     category: string;
     options: DailyQuizOption[];
 }
-
 
 export interface DailyQuizStats {
     streak: number;
@@ -35,9 +35,10 @@ export interface DailyQuizStats {
 
 export interface DailyQuizResponse {
     message: string;
-    status: string;
+    status: number;
     data: {
         quiz: DailyQuizQuestion;
+        is_correct: boolean;
         stats: DailyQuizStats;
     };
 }
