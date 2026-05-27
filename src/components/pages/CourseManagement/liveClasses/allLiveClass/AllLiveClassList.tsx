@@ -65,7 +65,7 @@ export default function AllLiveClassList() {
   const [items, setItems] = useState<LiveClassProps[]>([]);
 
   /* ---------- Live Classes Query ---------- */
-  const { data, isLoading: loadingLiveClass } =
+  const { data, isLoading: loadingLiveClass, isFetching } =
     useGetAllLiveClassesQuery({
       id: selectedCourseId!,
       ...qp,
@@ -96,18 +96,12 @@ export default function AllLiveClassList() {
   /* ---------- Reset on Filter Change ---------- */
   useEffect(() => {
     setQp(prev => ({ ...prev, pageIndex: 1 }));
-    setItems([]);
   }, [selectedCourseId, activeTab]);
 
   /* ---------- Search Debounce ---------- */
   useEffect(() => {
     const timer = setTimeout(() => {
-      setQp(prev => ({
-        ...prev,
-        pageIndex: 1,
-        search,
-      }));
-      setItems([]);
+      setQp(prev => ({ ...prev, pageIndex: 1, search }));
     }, 500);
 
     return () => clearTimeout(timer);
@@ -199,35 +193,41 @@ export default function AllLiveClassList() {
                 <VideoSkeleton key={i} />
               ))}
             </div>
-          ) : items.length ? (
-            <InfiniteScroll
-              dataLength={items.length}
-              next={fetchMore}
-              hasMore={hasMore}
-              scrollableTarget="video__listing__wrapper"
-              loader={
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-6">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <VideoSkeleton key={i} />
-                  ))}
-                </div>
-              }
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {items.map(item => (
-                  <LiveClassCard
-                    key={item.id}
-                    data={item}
-                    courseId={Number(item.course_id)}
-                  />
-                ))}
-              </div>
-            </InfiniteScroll>
           ) : (
-            <EmptyList
-              title="No Live Classes Found"
-              description="There are no live classes for the selected filters."
-            />
+            <div style={{ opacity: isFetching ? 0.5 : 1, transition: "opacity 0.2s", pointerEvents: isFetching ? "none" : "auto" }}>
+              {items.length ? (
+                <InfiniteScroll
+                  dataLength={items.length}
+                  next={fetchMore}
+                  hasMore={hasMore}
+                  scrollableTarget="video__listing__wrapper"
+                  loader={
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-6">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <VideoSkeleton key={i} />
+                      ))}
+                    </div>
+                  }
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {items.map(item => (
+                      <LiveClassCard
+                        key={item.id}
+                        data={item}
+                        courseId={Number(item.course_id)}
+                      />
+                    ))}
+                  </div>
+                </InfiniteScroll>
+              ) : (
+                !isFetching && (
+                  <EmptyList
+                    title="No Live Classes Found"
+                    description="There are no live classes for the selected filters."
+                  />
+                )
+              )}
+            </div>
           )}
         </Box>
       </div>
