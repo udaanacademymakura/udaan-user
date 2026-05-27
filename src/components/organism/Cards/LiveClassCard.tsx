@@ -1,6 +1,7 @@
 import { Box, Button, Divider, Typography, useTheme } from "@mui/material";
 import { type Theme } from "@mui/material/styles";
 import { Clock, People } from "iconsax-reactjs";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATH } from "../../../routes/PATH";
 import type { LiveClassProps } from "../../../types/liveClass";
@@ -12,6 +13,12 @@ const statusVariantMap: Record<string, StatusVariantKey> = {
     upcoming: "info",
     ongoing: "error",
 };
+
+function fmtCountdown(secs: number): string {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 function initialOf(name?: string): string {
     if (!name) return "?";
@@ -45,11 +52,42 @@ export default function LiveClassCard({
     const { id } = useParams();
     const navigate = useNavigate();
 
-    const canJoinLive = () => {
-        if (!data.start_time) return false;
-        const startTime = new Date(data.start_time).getTime();
-        return Date.now() >= startTime - 2 * 60 * 1000;
-    };
+    // countdown: null = not in 5-min window, positive = seconds left, 0 = start time reached
+    const [countdown, setCountdown] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (!data.start_time || data.status !== "upcoming") return;
+
+        const startMs = new Date(data.start_time).getTime();
+        let intervalId: ReturnType<typeof setInterval> | undefined;
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+        const startInterval = () => {
+            const tick = () => {
+                const remaining = Math.ceil((startMs - Date.now()) / 1000);
+                if (remaining <= 0) {
+                    setCountdown(0);
+                    clearInterval(intervalId);
+                } else {
+                    setCountdown(remaining);
+                }
+            };
+            tick();
+            intervalId = setInterval(tick, 1000);
+        };
+
+        const msUntilWindow = startMs - 5 * 60 * 1000 - Date.now();
+        if (msUntilWindow <= 0) {
+            startInterval();
+        } else {
+            timeoutId = setTimeout(startInterval, msUntilWindow);
+        }
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [data.start_time, data.status]);
 
     const startTimeLabel = getTime(data.start_time);
 
@@ -62,7 +100,9 @@ export default function LiveClassCard({
     const primaryTeacher = data?.teachers?.[0];
     const teacherImage = primaryTeacher?.live_preview_url || primaryTeacher?.thumbnail_url || undefined;
     const teacherNames = data?.teachers?.map((t) => t.name).join(", ") || "—";
-    const joinable = data.status === "ongoing" && canJoinLive();
+    const joinable =
+        data.status !== "ended" &&
+        (data.status === "ongoing" || (countdown !== null && countdown <= 0));
 
     return (
         <Box
@@ -207,7 +247,7 @@ export default function LiveClassCard({
                     size="small"
                     color={joinable ? "error" : "inherit"}
                     onClick={joinable ? handleJoinClass : undefined}
-                    disabled={data.status === "ended" || (data.status === "ongoing" && !joinable)}
+                    disabled={!joinable}
                     startIcon={
                         joinable ? (
                             <Box
@@ -242,9 +282,15 @@ export default function LiveClassCard({
                             : undefined,
                     }}
                 >
-                    {data.status === "upcoming" && `Starts at ${startTimeLabel}`}
-                    {data.status === "ongoing" && (joinable ? "Join Live" : `Join at ${startTimeLabel}`)}
                     {data.status === "ended" && "Class Ended"}
+                    {data.status === "ongoing" && "Join Live"}
+                    {data.status === "upcoming" && (
+                        countdown !== null && countdown > 0
+                            ? `Starts in ${fmtCountdown(countdown)}`
+                            : countdown === 0
+                                ? "Join Live"
+                                : `Starts at ${startTimeLabel}`
+                    )}
                 </Button>
             </Box>
         </Box>
