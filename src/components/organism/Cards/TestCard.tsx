@@ -85,18 +85,32 @@ export default function TestCard({ test, havePurchased, status: testStatus }: { 
         </Box> : ""}
       </div>
       <div className="bottom__wrapper mt-3">
-        {havePurchased && test?.test_type === "omr" ? <div className="flex justify-end items-center gap-2 mt-5">
-          <Button
-            variant="outlined"
-            color="primary"
-            component="a"
-            href={test?.download_format_url}
-            download
-          >
-            Download Format
-          </Button>
-          <Button variant="contained" color="primary" onClick={() => setOmrOpen(true)}>Start Now</Button>
-          <OmrInstructionModal open={omrOpen} onClose={() => setOmrOpen(false)} test={test} />
+        {havePurchased && test?.test_type === "omr" ? <div className="mt-5">
+          {test?.max_attempt != null && (
+            <Typography variant="caption" color="text.middle" className="flex justify-end mb-2">
+              Attempts: <strong className="ml-1">{test?.attempt_number ?? 0} / {test?.max_attempt}</strong>
+            </Typography>
+          )}
+          <div className="flex justify-end items-center gap-2">
+            <Button
+              variant="outlined"
+              color="primary"
+              component="a"
+              href={test?.download_format_url}
+              download
+            >
+              Download Format
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setOmrOpen(true)}
+              disabled={test?.max_attempt != null && (test?.attempt_number ?? 0) >= test.max_attempt}
+            >
+              {test?.max_attempt != null && (test?.attempt_number ?? 0) >= test.max_attempt ? "No Attempts Left" : "Start Now"}
+            </Button>
+            <OmrInstructionModal open={omrOpen} onClose={() => setOmrOpen(false)} test={test} />
+          </div>
         </div> :
           <div className="flex items-center justify-between">
             <TestActionButton

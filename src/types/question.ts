@@ -65,6 +65,8 @@ export interface TestProps {
     selections: SelectionType;
     mega_categories?: string[];
     download_format_url?: string;
+    attempt_number?: number | null;
+    max_attempt?: number | null;
     result?: {
         attempted: number | null;
         score: number | null;
