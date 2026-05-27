@@ -7,8 +7,8 @@ import {
     Typography,
 } from "@mui/material";
 import { Maximize2 } from "iconsax-reactjs";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { PATH } from "../../../../../routes/PATH";
 import { useGetMeetingSignatureMutation, useGetSingleLiveClassQuery } from "../../../../../services/courseApi";
 import { useGetZoomAccountsQuery } from "../../../../../services/liveApi";
@@ -25,46 +25,15 @@ type MeetingStatus =
     | "ready_to_join"
     | "ended";
 
-const MIN_PHASE_MS = 450;
-const CONGESTION_WINDOW_MS = 2 * 60 * 1000;
-const STUDENTS_PER_LEVEL = 40;
-const SIGNATURE_LEVEL_DELAY_MS = 650;
-const MAX_LEVEL_DELAY_MS = 30_000;
-// Per-watchdog-phase budget: at most 5 s each, at least 1 s each.
-const MAX_PHASE_WATCHDOG_MS = 5_000;
-const MIN_PHASE_WATCHDOG_MS = 1_000;
+const MIN_PHASE_MS = 450;    // visual dwell between steps
+const PHASE_TIMEOUT_MS = 5_000; // max per step before watchdog force-advances
+const PHASE_FAST_MS = 1_000;    // per step when signature came back quickly
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-function computeLevelCount(students: number): number {
-    return Math.max(1, Math.ceil(students / STUDENTS_PER_LEVEL));
-}
-
-function joinJitterMs(userId: number | string | undefined, maxMs: number): number {
-    if (!userId || maxMs <= 0) return 0;
-    let h = 0;
-    const s = String(userId);
-    for (let i = 0; i < s.length; i++) h = ((h * 31) + s.charCodeAt(i)) | 0;
-    return Math.abs(h) % maxMs;
-}
-
-function userJoinLevel(userId: number | string | undefined, liveId: number | string | undefined, levelCount: number): number {
-    const seed = `${userId ?? "guest"}:${liveId ?? "live"}`;
-    let h = 0;
-    for (let i = 0; i < seed.length; i++) h = ((h * 31) + seed.charCodeAt(i)) | 0;
-    return Math.abs(h) % levelCount;
-}
-
-function normalizeJoinLevel(value: string | null, fallback: number, levelCount: number): number {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) return fallback;
-    return Math.max(0, Math.min(levelCount - 1, Math.floor(parsed)));
-}
 
 export default function SingleLiveClassRoot() {
     const { courseId, liveId } = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
     const user = useAppSelector((state) => state.auth.user);
 
     const [meetingStatus, setMeetingStatus] = useState<MeetingStatus>("initial_loading");
@@ -91,13 +60,6 @@ export default function SingleLiveClassRoot() {
     const { data: zoomAccountsData, isLoading: isLoadingZoomAccounts } = useGetZoomAccountsQuery();
 
     const [generateSignature] = useGetMeetingSignatureMutation();
-
-    const joinLevel = useMemo(() => {
-        const students = liveClassData?.data?.active_students ?? 0;
-        const levelCount = computeLevelCount(students);
-        const fallback = userJoinLevel(user?.id, liveId, levelCount);
-        return normalizeJoinLevel(new URLSearchParams(location.search).get("level"), fallback, levelCount);
-    }, [location.search, liveId, user?.id, liveClassData]);
 
     const formatMeetingTime = (time: string | undefined) => {
         if (!time) return "";
@@ -171,19 +133,6 @@ export default function SingleLiveClassRoot() {
                 if (!meetingNumber) throw new Error("Invalid Meeting URL in server data.");
                 if (!sdkKey) throw new Error("Zoom SDK Key not found for this account.");
 
-                const startMs = meetingStartTime?.getTime() ?? 0;
-                const inCongestionWindow =
-                    startMs > 0 && Math.abs(Date.now() - startMs) < CONGESTION_WINDOW_MS;
-                if (inCongestionWindow) {
-                    const students = meetingData.active_students ?? 0;
-                    const maxMs = Math.min(15_000, Math.ceil(students / 40) * 1000);
-                    const jitter = joinJitterMs(user?.id, maxMs);
-                    if (jitter > 0) await sleep(jitter);
-                }
-
-                const signatureLevelDelay = Math.min(joinLevel * SIGNATURE_LEVEL_DELAY_MS, MAX_LEVEL_DELAY_MS);
-                if (signatureLevelDelay > 0) await sleep(signatureLevelDelay);
-
                 const sigRes = await generateSignature({
                     meeting_id: Number(meetingNumber),
                     account_id: Number(meetingData?.account_id),
@@ -225,7 +174,7 @@ export default function SingleLiveClassRoot() {
 
         if (liveClassData) checkStatusAndPrepare();
 
-    }, [liveClassData, isLoadingLiveClass, zoomAccountsData, isLoadingZoomAccounts, generateSignature, user, courseId, joinLevel, retryCount]);
+    }, [liveClassData, isLoadingLiveClass, zoomAccountsData, isLoadingZoomAccounts, generateSignature, user, courseId, retryCount]);
 
     // Iframe → parent message bridge. Listens for stage events posted by /meeting.html.
     useEffect(() => {
@@ -252,20 +201,15 @@ export default function SingleLiveClassRoot() {
         return () => clearTimeout(t);
     }, [retryCountdown]);
 
-    // Watchdog: fallback in case the iframe never posts back (old browser, silent SDK failure,
-    // CDN slow). Started once when phase reaches 4. Timers live in a ref so phase-change
-    // re-runs do NOT clear them — cleanup only on unmount.
-    //
-    // Timing is budget-based: total budget is MAX_LEVEL_DELAY_MS. Whatever the early phases
-    // already consumed is subtracted, and the remainder is split evenly across two intervals
-    // (4→5 and 5→6), clamped to [MIN_PHASE_WATCHDOG_MS, MAX_PHASE_WATCHDOG_MS] each.
+    // Watchdog: fallback if the iframe never posts back (old browser, silent SDK failure, CDN slow).
+    // If the signature came back within one phase budget (5 s) use fast mode (1 s per step),
+    // otherwise give each step the full 5 s.
     useEffect(() => {
         if (joinPhase < 4 || watchdogStartedRef.current) return;
         watchdogStartedRef.current = true;
 
         const elapsed = processStartTimeRef.current > 0 ? Date.now() - processStartTimeRef.current : 0;
-        const remaining = Math.max(MIN_PHASE_WATCHDOG_MS * 2, MAX_LEVEL_DELAY_MS - elapsed);
-        const phaseMs = Math.min(MAX_PHASE_WATCHDOG_MS, Math.max(MIN_PHASE_WATCHDOG_MS, Math.round(remaining / 3)));
+        const phaseMs = elapsed < PHASE_TIMEOUT_MS ? PHASE_FAST_MS : PHASE_TIMEOUT_MS;
 
         watchdogTimersRef.current.t5 = setTimeout(() => {
             setJoinPhase((curr) => (curr < 5 ? 5 : curr));
