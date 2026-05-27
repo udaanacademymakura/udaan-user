@@ -88,7 +88,7 @@ export default function TestCard({ test, havePurchased, status: testStatus }: { 
         {havePurchased && test?.test_type === "omr" ? <div className="mt-5">
           {test?.max_attempt != null && (
             <Typography variant="caption" color="text.middle" className="flex justify-end mb-2">
-              Attempts: <strong className="ml-1">{test?.attempt_number ?? 0} / {test?.max_attempt}</strong>
+              Attempts: <strong className="ml-1">{test?.attempts_used ?? 0} / {test?.max_attempt}</strong>
             </Typography>
           )}
           <div className="flex justify-end items-center gap-2">
@@ -105,9 +105,9 @@ export default function TestCard({ test, havePurchased, status: testStatus }: { 
               variant="contained"
               color="primary"
               onClick={() => setOmrOpen(true)}
-              disabled={test?.max_attempt != null && (test?.attempt_number ?? 0) >= test.max_attempt}
+              disabled={test?.max_attempt != null && (test?.attempts_used ?? 0) >= test.max_attempt}
             >
-              {test?.max_attempt != null && (test?.attempt_number ?? 0) >= test.max_attempt ? "No Attempts Left" : "Start Now"}
+              {test?.max_attempt != null && (test?.attempts_used ?? 0) >= test.max_attempt ? "No Attempts Left" : "Start Now"}
             </Button>
             <OmrInstructionModal open={omrOpen} onClose={() => setOmrOpen(false)} test={test} />
           </div>
