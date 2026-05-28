@@ -24,10 +24,7 @@ export default function TablePagination({
     };
 
     const handlePageSizeChange = (event: any) => {
-        setQp({
-            pageIndex: 1,
-            pageSize: Number(event.target.value)
-        });
+        setQp({ ...qp, pageIndex: 1, pageSize: Number(event.target.value) });
     };
 
     const goToFirstPage = () => {

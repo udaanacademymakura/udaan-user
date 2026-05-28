@@ -244,8 +244,5 @@ export const PATH = {
     },
     FREE_MATERIALS: {
         ROOT: "/free-materials",
-        VIEW: {
-            ROOT: (id?: number) => id ? `/free-materials/${id}` : "/free-materials/:id",
-        },
     },
 };

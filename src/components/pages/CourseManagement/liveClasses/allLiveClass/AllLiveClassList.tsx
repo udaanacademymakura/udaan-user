@@ -56,7 +56,6 @@ export default function AllLiveClassList() {
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<Status>("ongoing");
 
-  /* ---------- Pagination ---------- */
   const [qp, setQp] = useState<QueryParams>({
     pageIndex: 1,
     pageSize: 15,
@@ -64,7 +63,6 @@ export default function AllLiveClassList() {
 
   const [items, setItems] = useState<LiveClassProps[]>([]);
 
-  /* ---------- Live Classes Query ---------- */
   const { data, isLoading: loadingLiveClass, isFetching } =
     useGetAllLiveClassesQuery({
       id: selectedCourseId!,

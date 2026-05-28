@@ -191,10 +191,10 @@ const router = createBrowserRouter([
               { path: PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.REVIEW_TEST.ROOT({}), element: <ReviewTestRoot /> },
               { path: PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.REVIEW_TEST.REVIEW_SUBJECTIVE_TEST.ROOT({}), element: <ReviewSubjectTestRoot /> },
               { path: PATH.COURSE_MANAGEMENT.COURSES.SAVED_COURSES.ROOT, element: <SavedCourse /> },
-              { path: PATH.FREE_MATERIALS.VIEW.ROOT(), element: <FreeMaterials /> },
             ],
           },
-          { path: PATH.FREE_MATERIALS.ROOT, element: <Navigate to={PATH.FREE_MATERIALS.VIEW.ROOT(Number(import.meta.env.VITE_FREE_MATERIALS_COURSE_ID))} replace /> },
+          { path: PATH.FREE_MATERIALS.ROOT, element: <FreeMaterials /> },
+          { path: "/free-materials/:id", element: <Navigate to={PATH.FREE_MATERIALS.ROOT} replace /> },
 
           {
             element:
