@@ -307,7 +307,6 @@ export default function FreeMaterials() {
                 </div>
             )}
 
-            {/* ── VIDEOS tab ─────────────────────────────────────────── */}
             {activeCategory === "videos" && (
                 <CategoryContent
                     isLoading={loadingVideos}
@@ -325,7 +324,6 @@ export default function FreeMaterials() {
                 </CategoryContent>
             )}
 
-            {/* ── NOTES tab ──────────────────────────────────────────── */}
             {activeCategory === "notes" && (
                 <CategoryContent
                     isLoading={loadingNotes}
@@ -343,7 +341,6 @@ export default function FreeMaterials() {
                 </CategoryContent>
             )}
 
-            {/* ── AUDIOS tab ─────────────────────────────────────────── */}
             {activeCategory === "audios" && (
                 <CategoryContent
                     isLoading={loadingAudios}
@@ -361,7 +358,6 @@ export default function FreeMaterials() {
                 </CategoryContent>
             )}
 
-            {/* ── TESTS tab ──────────────────────────────────────────── */}
             {activeCategory === "tests" && (
                 <CategoryContent
                     isLoading={loadingTests}
@@ -379,7 +375,6 @@ export default function FreeMaterials() {
                 </CategoryContent>
             )}
 
-            {/* ── LIVE CLASSES tab ───────────────────────────────────── */}
             {activeCategory === "live_classes" && (
                 <CategoryContent
                     isLoading={loadingLive}
