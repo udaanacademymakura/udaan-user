@@ -1,5 +1,6 @@
 import { Box, Divider, IconButton, Typography, useTheme } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useThemeSettings } from '../../../../hooks/useThemeSettings';
 import { PATH } from '../../../../routes/PATH';
 import { useBookmakrCourseMutation } from '../../../../services/courseApi';
 import { showToast } from '../../../../slice/toastSlice';
@@ -12,6 +13,7 @@ import CourseStatus from './CourseStatus';
 export default function CourseCard({ course, havePurchased = false }: { course: CourseProps, havePurchased?: boolean }) {
     const dispatch = useAppDispatch()
     const theme = useTheme();
+    const { fallbackImageUrl } = useThemeSettings();
     const [bookmark] = useBookmakrCourseMutation();
     const handleBookmark = async () => {
         try {
@@ -39,7 +41,7 @@ export default function CourseCard({ course, havePurchased = false }: { course: 
             <Box className="course__image " sx={{
                 background: theme.palette.primary.contrastText
             }}>
-                <img src={course.thumbnail_url || "/fallback.png"} alt={course.name} className='w-full h-full object-cover aspect-2/1' />
+                <img src={course.thumbnail_url || fallbackImageUrl} alt={course.name} className='w-full h-full object-cover aspect-2/1' />
             </Box>
             <Box className="course__content h-full p-3  flex flex-col gap-2 justify-between" sx={{
                 background: theme.palette.gray.gray1

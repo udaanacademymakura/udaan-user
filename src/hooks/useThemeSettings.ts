@@ -9,6 +9,8 @@ export function useThemeSettings() {
     const logoUrl = s?.logo_url || "/logo.svg";
     const logoDarkUrl = s?.logo_dark_url || "/logo-dark.svg";
     const faviconUrl = s?.favicon_url || "/favicon.svg";
+    const loginImageUrl = s?.login_image_url || "/auth-image.png";
+    const fallbackImageUrl = s?.fallback_image_url || "/fallback.png";
 
     return {
         brandName,
@@ -18,6 +20,8 @@ export function useThemeSettings() {
         logoUrl,
         logoDarkUrl,
         faviconUrl,
+        loginImageUrl,
+        fallbackImageUrl,
         isLoading,
     };
 }

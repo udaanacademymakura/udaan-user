@@ -1,6 +1,7 @@
 import { Box, Button, Typography, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useThemeSettings } from "../../../../hooks/useThemeSettings";
 import { PATH } from "../../../../routes/PATH";
 import type { CourseProps } from "../../../../types/course";
 import Bookmark from "../../../atom/Bookmark";
@@ -10,6 +11,7 @@ export default function MyCourseCard({ course }: { course: CourseProps }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const theme = useTheme();
+    const { fallbackImageUrl } = useThemeSettings();
 
     const hasAccess =
         course.course_type === "free" ||
@@ -57,10 +59,10 @@ export default function MyCourseCard({ course }: { course: CourseProps }) {
             >
                 <Box
                     component="img"
-                    src={course.thumbnail_url || "/fallback.png"}
+                    src={course.thumbnail_url || fallbackImageUrl}
                     alt={course.name}
                     onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                        e.currentTarget.src = "/fallback.png";
+                        e.currentTarget.src = fallbackImageUrl;
                     }}
                     sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />

@@ -4,6 +4,7 @@ import { Maximize2 } from 'iconsax-reactjs';
 import Plyr, { type APITypes, type PlyrProps } from "plyr-react";
 import "plyr-react/plyr.css";
 import { useEffect, useRef, useState } from 'react';
+import { useThemeSettings } from '../../../hooks/useThemeSettings';
 import { useGetCourseMediaByTypeQuery, useGetSinglePlaylistQuery, useTrackCourseProgressMutation } from '../../../services/courseApi';
 import { resetReadingScreen, setReadingScreen } from '../../../slice/ReadingScreenSlice';
 import { showToast } from '../../../slice/toastSlice';
@@ -68,6 +69,7 @@ const SpotifyAudioPlayer = ({ audioUrl, imageUrl, title }: { audioUrl: string, i
 export default function ReadingDialog() {
     const theme = useTheme();
     const dispatch = useAppDispatch();
+    const { fallbackImageUrl } = useThemeSettings();
 
     const { open, type, media, title, isYouTube, mediaId, courseId, playlistId, isDownloadable } = useAppSelector(
         state => state.readScreen
@@ -375,7 +377,7 @@ export default function ReadingDialog() {
                 return (
                     <SpotifyAudioPlayer
                         audioUrl={mediaUrl || ""}
-                        imageUrl="/fallback.png"
+                        imageUrl={fallbackImageUrl}
                         title="Sample Audio"
                     />
                 );
@@ -524,7 +526,7 @@ export default function ReadingDialog() {
                                                 overflow: 'hidden'
                                             }}>
                                                 <img
-                                                    src={thumbnailUrl || "/fallback.png"}
+                                                    src={thumbnailUrl || fallbackImageUrl}
                                                     alt={relatedVideo.file_name}
                                                     style={{
                                                         position: 'absolute',

@@ -90,4 +90,6 @@ export interface ThemeSettingProps {
     logo_url?: string;
     logo_dark_url?: string;
     favicon_url?: string;
+    login_image_url?: string;
+    fallback_image_url?: string;
 }
