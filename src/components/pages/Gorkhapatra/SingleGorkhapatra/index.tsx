@@ -1,9 +1,11 @@
 import { ArrowBack } from "@mui/icons-material";
 import { Box, Button, Collapse, Divider, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
-import { ArrowDown2, ArrowRight2, Calendar, Eye, User } from "iconsax-reactjs";
+import { ArrowDown2, ArrowRight2, Calendar, DocumentDownload, Eye, User } from "iconsax-reactjs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetGorkhapatraByIdQuery, useRelatedGorkhapatraQuery } from "../../../../services/gorkhapatraApi";
+import { useDownloadGorkhapatraMutation, useGetGorkhapatraByIdQuery, useRelatedGorkhapatraQuery } from "../../../../services/gorkhapatraApi";
+import { showToast } from "../../../../slice/toastSlice";
+import { useAppDispatch } from "../../../../store/hook";
 import { formatDateForDisplay } from "../../../../utils/dateFormat";
 import { renderHtml } from "../../../../utils/renderHtml";
 import CopyLink from "../../../atom/CopyLink";
@@ -49,6 +51,7 @@ function processContentWithToc(htmlContent: string): { updatedContent: string; t
 export default function SingleGorkhapatraRoot() {
 
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
     const { id } = useParams<{ id: string }>();
     const scrollContainerRef = useRef<HTMLDivElement | null>(null);
     const [activeId, setActiveId] = useState<string>("");
@@ -64,6 +67,8 @@ export default function SingleGorkhapatraRoot() {
     );
 
     const { data: relatedGorkhapatra } = useRelatedGorkhapatraQuery({ id: Number(id) }, { skip: !id });
+
+    const [downloadGorkhapatra, { isLoading: isDownloading }] = useDownloadGorkhapatraMutation();
 
     const gorkhapatraData = data?.data;
     const date: string = formatDateForDisplay(gorkhapatraData?.created_at);
@@ -165,6 +170,31 @@ export default function SingleGorkhapatraRoot() {
         navigate(-1);
     };
 
+    const handleDownload = async () => {
+        if (!id) return;
+        try {
+            const blob = await downloadGorkhapatra({ id: Number(id) }).unwrap();
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+
+            a.href = url;
+            a.download = `${gorkhapatraData?.title || "gorkhapatra"}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (e: any) {
+            dispatch(
+                showToast({
+                    message: e?.data?.message || "Unable to download Gorkhapatra",
+                    severity: "error",
+                }),
+            );
+        }
+    };
+
     const handleTocItemClick = (itemId: string) => {
         scrollToHeading(itemId);
         if (!isDesktop) {
@@ -257,7 +287,16 @@ export default function SingleGorkhapatraRoot() {
                         </Stack>
                     )}
                 </Stack>
-                <Stack>
+                <Stack className="items-center! gap-2">
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<DocumentDownload size={18} />}
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                    >
+                        {isDownloading ? "Downloading…" : "Download"}
+                    </Button>
                     <CopyLink />
                 </Stack>
             </Stack>

@@ -48,12 +48,21 @@ export const gorkhapatraApi = createApi({
                 method: "GET",
             }),
             providesTags: (_result, _error, { id }) => [{ type: "Gorkhapatra", id }],
-        })
+        }),
+
+        downloadGorkhapatra: builder.mutation<Blob, { id: number }>({
+            query: ({ id }) => ({
+                url: `/gorkhapatra/${id}/download`,
+                method: "GET",
+                responseHandler: (response) => response.blob(),
+            }),
+        }),
     })
 })
 
 export const {
     useGetAllGorkhapatraQuery,
     useGetGorkhapatraByIdQuery,
-    useRelatedGorkhapatraQuery
+    useRelatedGorkhapatraQuery,
+    useDownloadGorkhapatraMutation
 } = gorkhapatraApi;
