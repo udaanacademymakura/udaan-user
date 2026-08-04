@@ -12,8 +12,13 @@ import TestSample from "../TestSample";
 export default function ReviewSubjectTestRoot() {
     const theme = useTheme();
     const { courseId, testId } = useParams();
+    const numericCourseId = courseId ? Number(courseId) : undefined;
+    const numericTestId = Number(testId);
     const [tabIndex, setTabIndex] = useState(0);
-    const { data } = useReviewSubjectiveTestResultQuery({ courseId: Number(courseId), testId: Number(testId) });
+    const { data } = useReviewSubjectiveTestResultQuery(
+        { courseId: numericCourseId, testId: numericTestId },
+        { skip: !Number.isFinite(numericTestId) }
+    );
     const handleTabChange = (_: any, newValue: number) => setTabIndex(newValue);
 
     const items = [
@@ -154,7 +159,10 @@ export default function ReviewSubjectTestRoot() {
         ));
     };
 
-    const { data: result } = useGetTestResultQuery({ courseId: Number(courseId), testId: Number(testId) });
+    const { data: result } = useGetTestResultQuery(
+        { courseId: numericCourseId, testId: numericTestId },
+        { skip: !Number.isFinite(numericTestId) }
+    );
 
 
     return (

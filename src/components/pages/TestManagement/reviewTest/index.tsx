@@ -11,7 +11,13 @@ import TestResultSummary from "../../../organism/ResultScreen";
 export default function ReviewTestRoot() {
     const theme = useTheme();
     const { courseId, testId } = useParams();
-    const { data, isLoading } = useReviewTestResultQuery({ courseId: Number(courseId), testId: Number(testId) });
+    const numericCourseId = courseId ? Number(courseId) : undefined;
+    const numericTestId = Number(testId);
+    const skip = !Number.isFinite(numericTestId);
+    const { data, isLoading } = useReviewTestResultQuery(
+        { courseId: numericCourseId, testId: numericTestId },
+        { skip }
+    );
     const [tabIndex, setTabIndex] = useState(0);
 
     const handleTabChange = (_: any, newValue: number) => setTabIndex(newValue);
@@ -84,7 +90,10 @@ export default function ReviewTestRoot() {
         ));
     };
 
-    const { data: result } = useGetTestResultQuery({ courseId: Number(courseId), testId: Number(testId) });
+    const { data: result } = useGetTestResultQuery(
+        { courseId: numericCourseId, testId: numericTestId },
+        { skip }
+    );
 
     return (
         <div className="test__review__root h-full overflow-auto">

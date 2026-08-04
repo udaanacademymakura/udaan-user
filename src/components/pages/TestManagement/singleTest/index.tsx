@@ -75,7 +75,10 @@ export default function SingleTestRoot() {
         testId: string;
     }>();
 
-    const numericCourseId = Number(courseId);
+    // Rendered by both `/courses/:courseId/test/:testId` and the standalone
+    // `/test/:testId` — courseId is absent on the latter, so it must stay
+    // undefined rather than becoming NaN.
+    const numericCourseId = courseId ? Number(courseId) : undefined;
     const numericTestId = Number(testId);
 
     const STORAGE_KEY = `mcq_test_progress_${courseId}_${testId}`;
@@ -454,17 +457,21 @@ export default function SingleTestRoot() {
                 onReview={() => {
                     try { localStorage.removeItem(RESULT_KEY); } catch { /* ignore */ }
                     navigate(
-                        PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.REVIEW_TEST.ROOT({
-                            courseId: numericCourseId,
-                            testId: numericTestId,
-                        }),
+                        numericCourseId
+                            ? PATH.COURSE_MANAGEMENT.COURSES.VIEW_TEST.REVIEW_TEST.ROOT({
+                                courseId: numericCourseId,
+                                testId: numericTestId,
+                            })
+                            : PATH.TEST.VIEW_TEST.REVIEW_TEST.ROOT({ testId: numericTestId }),
                         { replace: true }
                     );
                 }}
                 onBack={() => {
                     try { localStorage.removeItem(RESULT_KEY); } catch { /* ignore */ }
                     navigate(
-                        PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(numericCourseId),
+                        numericCourseId
+                            ? PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(numericCourseId)
+                            : PATH.TEST.ROOT,
                         { replace: true }
                     );
                 }}

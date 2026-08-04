@@ -93,13 +93,13 @@ export const testApi = createApi({
                 method: "DELETE",
             })
         }),
-        reviewTestResult: builder.query<{ data: McqReportData }, { courseId: number; testId: number }>({
+        reviewTestResult: builder.query<{ data: McqReportData }, { courseId?: number; testId: number }>({
             query: ({ courseId, testId }) => ({
                 url: `/test/${testId}/review${courseId ? `?course_id=${courseId}` : ''}`,
                 method: "GET",
             })
         }),
-        reviewSubjectiveTestResult: builder.query<{ data: any }, { courseId: number; testId: number }>({
+        reviewSubjectiveTestResult: builder.query<{ data: any }, { courseId?: number; testId: number }>({
             query: ({ courseId, testId }) => ({
                 url: `/test/${testId}/review/subjective${courseId ? `?course_id=${courseId}` : ''}`,
                 method: "GET",
@@ -113,7 +113,7 @@ export const testApi = createApi({
             }),
             invalidatesTags: () => [{ id: "LIST", type: "Test" }]
         }),
-        getTestResult: builder.query<GlobalResponse & McqSubmissionResponse, { courseId: number; testId: number }>({
+        getTestResult: builder.query<GlobalResponse & McqSubmissionResponse, { courseId?: number; testId: number }>({
             query: ({ courseId, testId }) => ({
                 url: `/test/${testId}/result${courseId ? `?course_id=${courseId}` : ''}`,
                 method: "GET",
