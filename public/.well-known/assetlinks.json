@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.udaan.Shaikshik.kendra",
       "sha256_cert_fingerprints": [
-        "7E:20:E1:25:31:04:9A:57:E7:C7:89:BB:4E:D5:D7:DF:40:0A:DC:BD:7C:22:DC:6D:14:5F:08:B8:35:5A:EE:E6"
+        "7E:20:E1:25:31:04:9A:57:E7:C7:89:BB:4E:D5:D7:DF:40:0A:DC:BD:7C:22:DC:6D:14:5F:08:B8:35:5A:EE:E6",
+        "EE:FD:4C:54:D2:B2:6B:90:DD:62:71:4E:34:42:65:75:A3:B6:CC:63:92:03:60:E2:8D:6B:78:C2:1F:12:6E:93"
       ]
     }
   }
