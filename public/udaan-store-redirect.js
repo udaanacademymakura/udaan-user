@@ -107,7 +107,25 @@
        * is missing, follows browser_fallback_url to the Play Store. This also
        * rescues the in-app browser case (Facebook/Instagram webviews) where
        * App Link verification never fires, so an installed app still wins.
+      
+       * The tapped URL rides to the Play Store as the install`referrer`, so
+        * the app's first launch after installation can recover it (deferred
+          * deep linking — see lib / core / deeplink / install_referrer_deeplink.dart).
+       * Encoding layers, outermost first: the store URL is a query - string
+        * value of the intent URL, the referrer is a query - string value of the
+          * store URL, and the deep link is a query - string value of the referrer.
+       * The Play Store decodes the referrer once before handing it to the
+        * app, which then reads `deeplink=` out of what remains.
        */
+      var deepLink =
+        'https://' +
+        window.location.host +
+        window.location.pathname +
+        window.location.search;
+      var storeUrlWithReferrer =
+        PLAY_STORE_URL +
+        '&referrer=' +
+        encodeURIComponent('deeplink=' + encodeURIComponent(deepLink));
       var intentUrl =
         'intent://' +
         window.location.host +
@@ -116,7 +134,7 @@
         '#Intent;scheme=https;package=' +
         ANDROID_PACKAGE +
         ';S.browser_fallback_url=' +
-        encodeURIComponent(PLAY_STORE_URL) +
+        encodeURIComponent(storeUrlWithReferrer) +
         ';end';
 
       window.location.replace(intentUrl);
