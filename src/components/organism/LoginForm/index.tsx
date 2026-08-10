@@ -21,12 +21,14 @@ import {
 import { setCredentials } from "../../../slice/authSlice";
 import { showToast } from "../../../slice/toastSlice";
 import { useAppDispatch } from "../../../store/hook";
+import { usePendingRedirect, withRedirectLink } from "../../../utils/redirectLink";
 import NewDeviceDetectedDialog from "../Dialog/NewDeviceDetectedDialog";
 
 export default function LoginForm() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { loginType } = useLoginType();
+    const redirectLink = usePendingRedirect();
 
     const [useOtp, setUseOtp] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +66,12 @@ export default function LoginForm() {
             if (!isPasswordMode) {
                 try {
                     await validateUser({ data: values.phone }).unwrap();
-                    navigate(`${PATH.AUTH.VERIFY_OTP.ROOT}?phone=${values.phone}`);
+                    navigate(
+                        withRedirectLink(
+                            `${PATH.AUTH.VERIFY_OTP.ROOT}?phone=${values.phone}`,
+                            redirectLink,
+                        ),
+                    );
                 } catch (error: any) {
                     dispatch(
                         showToast({
@@ -87,7 +94,7 @@ export default function LoginForm() {
                         }),
                     );
 
-                    navigate(PATH.AUTH.INTEREST.ROOT, { replace: true });
+                    navigate(redirectLink || PATH.AUTH.INTEREST.ROOT, { replace: true });
                 } catch (e: any) {
                     setNewDeviceDialog({
                         open: e?.data?.data?.user_id ? true : false,

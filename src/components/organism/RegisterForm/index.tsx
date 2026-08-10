@@ -1,41 +1,27 @@
 import { Button, FormHelperText, InputLabel, OutlinedInput } from "@mui/material";
 import { useFormik } from "formik";
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { PATH } from "../../../routes/PATH";
 import { useRegisterMutation } from "../../../services/authApi";
 import { showToast } from "../../../slice/toastSlice";
 import { useAppDispatch, useAppSelector } from "../../../store/hook";
+import { usePendingRedirect, withRedirectLink } from "../../../utils/redirectLink";
 
 export default function RegisterForm() {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
     const [registerUser, { isLoading }] = useRegisterMutation();
     const user = useAppSelector((state) => state.auth.user);
+    const redirectLink = usePendingRedirect();
 
     // Redirect if user is already logged in
     useEffect(() => {
         if (user) {
-            const redirectUrl = getPendingRedirectUrl();
-            if (redirectUrl) {
-                navigate(redirectUrl);
-            } else {
-                navigate(PATH.DASHBOARD.ROOT);
-            }
+            navigate(redirectLink || PATH.DASHBOARD.ROOT, { replace: true });
         }
-    }, [user, navigate]);
-
-    const getPendingRedirectUrl = (): string => {
-        const courseId = searchParams.get("course");
-        const testId = searchParams.get("test");
-        const bundleId = searchParams.get("bundle");
-        if (courseId) return PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(Number(courseId));
-        if (testId) return PATH.TEST.ROOT;
-        if (bundleId) return PATH.TEST.EXPLORE_TEST.BUNDLE_TEST.VIEW_BUNDLE.ROOT(Number(bundleId));
-        return "";
-    };
+    }, [user, redirectLink, navigate]);
 
     const validationSchema = Yup.object({
         name: Yup.string().required("Full name is required"),
@@ -64,9 +50,12 @@ export default function RegisterForm() {
                         severity: "success",
                     }),
                 );
-                const redirectUrl = getPendingRedirectUrl();
-                const otpPath = `${PATH.AUTH.VERIFY_OTP.ROOT}?phone=${values.phone}${redirectUrl ? `&redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`;
-                navigate(otpPath);
+                navigate(
+                    withRedirectLink(
+                        `${PATH.AUTH.VERIFY_OTP.ROOT}?phone=${values.phone}`,
+                        redirectLink,
+                    ),
+                );
             } catch (e: any) {
                 dispatch(
                     showToast({

@@ -15,6 +15,7 @@ import { useResendOtpMutation, useVerifyOtpMutation } from "../../../../services
 import { setCredentials } from "../../../../slice/authSlice";
 import { showToast } from "../../../../slice/toastSlice";
 import { useAppDispatch, useAppSelector } from "../../../../store/hook";
+import { usePendingRedirect } from "../../../../utils/redirectLink";
 import AuthHeader from "../../../molecules/AuthHeader";
 import NewDeviceDetectedDialog from "../../../organism/Dialog/NewDeviceDetectedDialog";
 
@@ -29,12 +30,12 @@ export default function VerifyOTP() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [phone, setPhone] = useState<string>("");
-    const [redirectUrl, setRedirectUrl] = useState<string>("");
     const [isCheckingPhone, setIsCheckingPhone] = useState(true);
     const [timer, setTimer] = useState(0);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.auth.user);
+    const redirectLink = usePendingRedirect();
     const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
     const [resendOtp, { isLoading: isSending }] = useResendOtpMutation();
     const [newDeviceDialog, setNewDeviceDialog] = useState<{
@@ -44,17 +45,12 @@ export default function VerifyOTP() {
         userId?: string;
     }>({ open: false });
 
-    // Initialize phone number
     useEffect(() => {
         const phoneNumber = searchParams.get("phone");
-        const redirect_url = searchParams.get("redirect_url");
         if (!phoneNumber) {
             dispatch(showToast({ message: "Phone number not found. Please login again.", severity: "error" }));
             navigate(PATH.AUTH.LOGIN.ROOT, { replace: true });
             return;
-        }
-        if (redirect_url) {
-            setRedirectUrl(redirect_url);
         }
         setPhone(phoneNumber);
         setIsCheckingPhone(false);
@@ -62,13 +58,9 @@ export default function VerifyOTP() {
 
     useEffect(() => {
         if (user) {
-            if (redirectUrl) {
-                navigate(redirectUrl, { replace: true });
-            } else {
-                navigate(PATH.AUTH.INTEREST.ROOT, { replace: true });
-            }
+            navigate(redirectLink || PATH.AUTH.INTEREST.ROOT, { replace: true });
         }
-    }, [user, redirectUrl, navigate]);
+    }, [user, redirectLink, navigate]);
 
     useEffect(() => {
         const timerEnd = localStorage.getItem("otpTimerEnd");
@@ -123,11 +115,7 @@ export default function VerifyOTP() {
                     user: response.data.user,
                 }));
 
-                if (redirectUrl) {
-                    navigate(redirectUrl, { replace: true });
-                } else {
-                    navigate(PATH.AUTH.INTEREST.ROOT);
-                }
+                navigate(redirectLink || PATH.AUTH.INTEREST.ROOT, { replace: true });
             } catch (e: any) {
                 setNewDeviceDialog({
                     open: e?.data?.data?.user_id ? true : false,

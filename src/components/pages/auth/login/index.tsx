@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useThemeSettings } from "../../../../hooks/useThemeSettings";
 import { PATH } from "../../../../routes/PATH";
 import AuthHeader from "../../../molecules/AuthHeader";
@@ -7,6 +7,7 @@ import LoginForm from "../../../organism/LoginForm";
 
 export default function Login() {
     const { brandName } = useThemeSettings();
+    const { search } = useLocation();
     return (
         <>
             <AuthHeader
@@ -15,7 +16,7 @@ export default function Login() {
             />
             <LoginForm />
             <div className="mt-14 text-center">
-                <Typography variant="subtitle2" color="text.light">Dont Have an Account ? <Link to={PATH.AUTH.REGISTER.ROOT} className="inline-block"><Typography color="primary" variant="subtitle2">Register</Typography></Link></Typography>
+                <Typography variant="subtitle2" color="text.light">Dont Have an Account ? <Link to={{ pathname: PATH.AUTH.REGISTER.ROOT, search }} className="inline-block"><Typography color="primary" variant="subtitle2">Register</Typography></Link></Typography>
             </div>
         </>
     )

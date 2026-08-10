@@ -1,10 +1,13 @@
 import { Box, CircularProgress } from "@mui/material";
+import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useGetAllLiveClassesQuery } from '../services/liveApi';
 import { useAppSelector } from '../store/hook';
+import { clearRedirectLink, withRedirectLink } from '../utils/redirectLink';
 import { PATH } from './PATH';
 
 const LIVE_CLASS_DISMISSED_KEY = 'live_class_dismissed';
+const LANDING_PATHS = ['/', PATH.DASHBOARD.ROOT];
 
 export default function Private() {
     const user = useAppSelector((state) => state.auth.user);
@@ -19,8 +22,19 @@ export default function Private() {
         { skip: !user || dismissed || isOnLiveClassPage || isJoiningLiveClass }
     );
 
+    const hasLiveClass = (data?.data?.pagination?.total ?? 0) > 0;
+    const arrived = Boolean(user) && !isLoading && !(hasLiveClass && !dismissed);
+
+    // The pending link has served its purpose once the user reaches a protected route
+    useEffect(() => {
+        if (arrived) clearRedirectLink();
+    }, [arrived]);
+
     if (!user) {
-        return <Navigate to={PATH.AUTH.LOGIN.ROOT} replace />;
+        const intended = LANDING_PATHS.includes(location.pathname)
+            ? ""
+            : `${location.pathname}${location.search}`;
+        return <Navigate to={withRedirectLink(PATH.AUTH.LOGIN.ROOT, intended)} replace />;
     }
 
     if (isLoading) {
@@ -30,8 +44,6 @@ export default function Private() {
             </Box>
         );
     }
-
-    const hasLiveClass = (data?.data?.pagination?.total ?? 0) > 0;
 
     if (hasLiveClass && !dismissed) {
         return <Navigate to={PATH.ONGOING_LIVE_CLASSES.ROOT} />;

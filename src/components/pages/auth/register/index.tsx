@@ -1,10 +1,11 @@
 import { Typography } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { PATH } from "../../../../routes/PATH";
 import AuthHeader from "../../../molecules/AuthHeader";
 import RegisterForm from "../../../organism/RegisterForm";
 
 export default function Register() {
+    const { search } = useLocation();
     return (
         <>
             <AuthHeader
@@ -13,7 +14,7 @@ export default function Register() {
             />
             <RegisterForm />
             <div className="mt-14 text-center">
-                <Typography variant="subtitle2" color="text.light">Already have an account? <Link to={PATH.AUTH.LOGIN.ROOT} className="inline-block"><Typography color="primary" variant="subtitle2">Login</Typography></Link></Typography>
+                <Typography variant="subtitle2" color="text.light">Already have an account? <Link to={{ pathname: PATH.AUTH.LOGIN.ROOT, search }} className="inline-block"><Typography color="primary" variant="subtitle2">Login</Typography></Link></Typography>
             </div>
         </>
     )
