@@ -31,6 +31,7 @@
    * Anything not listed here is an ordinary web page — leave it alone.
    */
   var APP_PATHS = [
+    '/auth',
     '/gorkhapatra',
     '/course',
     '/courses',
