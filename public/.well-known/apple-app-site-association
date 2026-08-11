@@ -12,9 +12,11 @@
             "comment": "Escape hatch: append ?no_app=1 to force any link to stay in the browser."
           },
           {
-            "/": "/auth*",
-            "comment": "Signup funnel: /auth/register?redirect_link=gorkhapatra/14"
+            "/": "/auth/bridge*",
+            "exclude": true,
+            "comment": "Live-class hand-off loaded in the app's own webview — must never open the app."
           },
+          { "/": "/auth/register*", "comment": "Signup funnel: /auth/register?redirect_link=gorkhapatra/14" },
           { "/": "/gorkhapatra*", "comment": "Gorkhapatra listing and detail" },
           { "/": "/course/*", "comment": "Course detail" },
           { "/": "/courses*", "comment": "Course listing, course detail and course tests" },

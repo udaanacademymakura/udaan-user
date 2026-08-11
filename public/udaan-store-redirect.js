@@ -30,8 +30,22 @@
    *
    * Anything not listed here is an ordinary web page — leave it alone.
    */
+  /*
+   * Paths that must NEVER redirect, checked before anything else.
+   *
+   * /auth/bridge is the live-class hand-off: the app loads it inside its own
+   * webview. Redirecting there sends the user to the store mid-join on iOS,
+   * and on Android hands the webview an `intent://` URL it cannot resolve —
+   * the "URL couldn't be found" error.
+   */
+  var NEVER_REDIRECT = ['/auth/bridge'];
+
+  /* Paths that only make sense with a destination attached. A bare visit to
+   * the web app's own signup page must stay on the web. */
+  var REQUIRE_REDIRECT_LINK = ['/auth/'];
+
   var APP_PATHS = [
-    '/auth',
+    '/auth/register',
     '/gorkhapatra',
     '/course',
     '/courses',
@@ -82,10 +96,32 @@
     return false;
   }
 
+  function startsWithAny(path, list) {
+    for (var i = 0; i < list.length; i++) {
+      if (path.indexOf(list[i]) === 0) return true;
+    }
+    return false;
+  }
+
   function run() {
     // Escape hatch, matching the `no_app=1` exclude rule in the AASA file:
     // https://udaanacademy.com.np/gorkhapatra/14?no_app=1 always stays on web.
     if (/[?&]no_app=1(&|$)/.test(window.location.search)) return;
+
+    var path = String(window.location.pathname || '').toLowerCase();
+    var search = window.location.search || '';
+
+    // Pages the app itself loads in a webview. Never touch these.
+    if (startsWithAny(path, NEVER_REDIRECT)) return;
+
+    // Funnel pages are only worth a store redirect when they carry a
+    // destination; otherwise this is someone using the web app normally.
+    if (
+      startsWithAny(path, REQUIRE_REDIRECT_LINK) &&
+      !/[?&]redirect_link=/.test(search)
+    ) {
+      return;
+    }
 
     if (!isDeepLinkablePath(window.location.pathname)) return;
 
@@ -107,15 +143,15 @@
        * is missing, follows browser_fallback_url to the Play Store. This also
        * rescues the in-app browser case (Facebook/Instagram webviews) where
        * App Link verification never fires, so an installed app still wins.
-      
-       * The tapped URL rides to the Play Store as the install`referrer`, so
-        * the app's first launch after installation can recover it (deferred
-          * deep linking — see lib / core / deeplink / install_referrer_deeplink.dart).
-       * Encoding layers, outermost first: the store URL is a query - string
-        * value of the intent URL, the referrer is a query - string value of the
-          * store URL, and the deep link is a query - string value of the referrer.
+       *
+       * The tapped URL rides to the Play Store as the install `referrer`, so
+       * the app's first launch after installation can recover it (deferred
+       * deep linking — see lib/core/deeplink/install_referrer_deeplink.dart).
+       * Encoding layers, outermost first: the store URL is a query-string
+       * value of the intent URL, the referrer is a query-string value of the
+       * store URL, and the deep link is a query-string value of the referrer.
        * The Play Store decodes the referrer once before handing it to the
-        * app, which then reads `deeplink=` out of what remains.
+       * app, which then reads `deeplink=` out of what remains.
        */
       var deepLink =
         'https://' +
@@ -126,6 +162,7 @@
         PLAY_STORE_URL +
         '&referrer=' +
         encodeURIComponent('deeplink=' + encodeURIComponent(deepLink));
+
       var intentUrl =
         'intent://' +
         window.location.host +
