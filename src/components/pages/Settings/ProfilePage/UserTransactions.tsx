@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useGetAllUserTransacionsQuery } from "../../../../services/courseApi";
 import type { TransactionProps } from "../../../../types/transactions";
 import { formatDateForDisplay } from "../../../../utils/dateFormat";
+import { getModuleLabel } from "../../../../utils/moduleLabel";
 import { getTransactionStatus } from "../../../../utils/statusMap";
 import StatusPill from "../../../atom/StatusPill";
 import UdaanTable from "../../../molecules/Table";
@@ -30,7 +31,7 @@ export default function UserTransactions() {
             ),
         },
         {
-            header: "Course Name",
+            header: "Purchased Item",
             accessorKey: "course_name",
             cell: ({ row }) => (
                 <Tooltip title={row.original.course_name} arrow>
@@ -38,6 +39,13 @@ export default function UserTransactions() {
                         {row.original.course_name || "N/A"}
                     </Typography>
                 </Tooltip>
+            ),
+        },
+        {
+            header: "Type",
+            accessorKey: "module_type",
+            cell: ({ row }) => (
+                <Typography variant="subtitle1">{getModuleLabel(row.original.module_type)}</Typography>
             ),
         },
         {

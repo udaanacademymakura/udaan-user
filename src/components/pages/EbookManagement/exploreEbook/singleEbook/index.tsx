@@ -43,7 +43,7 @@ export default function SingleExploreEbook() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div className="lg:col-span-4">
                         <Box
-                            className="image__wrapper aspect-3/4 rounded-md overflow-hidden relative flex items-center justify-center"
+                            className="image__wrapper aspect-3/4 lg:aspect-square rounded-md overflow-hidden relative flex items-center justify-center"
                             sx={{ background: (theme) => theme.palette.primary.dark }}
                         >
                             {ebook?.thumbnail_url ? (

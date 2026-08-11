@@ -1,10 +1,11 @@
 import type { Pagination } from ".";
-import type { PaymentMethods } from "./purchase";
+import type { PaymentMethods, PurchaseModuleTypes } from "./purchase";
 import type { GlobalResponse } from "./user";
 
 export interface TransactionProps {
     id: number;
     course_name: string;
+    module_type?: PurchaseModuleTypes;
     payment_method: string;
     purchased_date: string;
     amount_paid: number;
