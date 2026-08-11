@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePaymentGateways } from "../../../hooks/usePaymentGateways";
 import { useGetCourseByIdQuery, usePurchaseCourseWithEsewaMutation, usePurchaseWithKhaltiMutation } from "../../../services/courseApi";
+import { useGetEbookByIdQuery } from '../../../services/ebookApi';
 import { useGetBundleByOverviewQuery, useGetTestOverviewQuery } from '../../../services/testApi';
 import { showToast } from '../../../slice/toastSlice';
 import { useAppDispatch } from '../../../store/hook';
@@ -56,6 +57,7 @@ export default function PurchaseLayout() {
     const { data: subscriptionCourse } = useGetCourseByIdQuery({ id: Number(courseId) }, { skip: !isSubscription });
     const { data: test } = useGetTestOverviewQuery({ id: Number(id) }, { skip: !id || type !== "test" });
     const { data: bundle } = useGetBundleByOverviewQuery({ id: Number(id) }, { skip: !id || type !== "bundle" })
+    const { data: ebook } = useGetEbookByIdQuery({ id: Number(id) }, { skip: !id || type !== "ebook" })
     const [payViaEsewa, { isLoading: payingViaEsewa }] = usePurchaseCourseWithEsewaMutation();
     const [payViaKhalti, { isLoading: isKhaltiLoading }] = usePurchaseWithKhaltiMutation();
 
@@ -81,6 +83,10 @@ export default function PurchaseLayout() {
             case "bundle":
                 data = bundle?.data;
                 price = Number(bundle?.data?.sale_price) || 0;
+                break;
+            case "ebook":
+                data = ebook?.data ? { ...ebook.data, name: ebook.data.title } : undefined;
+                price = Number(ebook?.data?.sale_price) || 0;
                 break;
             default:
                 data = null;

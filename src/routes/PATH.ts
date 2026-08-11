@@ -175,6 +175,21 @@ export const PATH = {
             ROOT: (id?: number) => (id ? `/my-course/${id}` : "/my-course/:id"),
         },
     },
+    EBOOK: {
+        ROOT: "/ebooks",
+        EXPLORE_EBOOK: {
+            ROOT: "/ebooks/explore",
+            VIEW_EBOOK: {
+                ROOT: (id?: number) => id ? `/ebooks/explore/${id}` : "/ebooks/explore/:id",
+            },
+        },
+        MY_EBOOK: {
+            ROOT: "/ebooks/my-ebooks",
+            VIEW_EBOOK: {
+                ROOT: (id?: number) => id ? `/ebooks/my-ebooks/${id}` : "/ebooks/my-ebooks/:id",
+            },
+        },
+    },
     GORKHAPATRA: {
         ROOT: "/gorkhapatra",
         VIEW_GORKHAPATRA: {

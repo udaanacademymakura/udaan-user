@@ -8,6 +8,7 @@ import { countryApi } from '../services/countryApi';
 import { courseApi } from '../services/courseApi';
 import { dashboardApi } from '../services/dashboardApi';
 import { discussionApi } from '../services/discussionApi';
+import { ebookApi } from '../services/ebookApi';
 import { gorkhapatraApi } from '../services/gorkhapatraApi';
 import { liveClassApi } from '../services/liveApi';
 import { mediaApi } from '../services/mediaApi';
@@ -47,6 +48,7 @@ export const store = configureStore({
         [discussionApi.reducerPath]: discussionApi.reducer,
         [commentApi.reducerPath]: commentApi.reducer,
         [controlsApi.reducerPath]: controlsApi.reducer,
+        [ebookApi.reducerPath]: ebookApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(authApi.middleware)
@@ -66,6 +68,7 @@ export const store = configureStore({
             .concat(discussionApi.middleware)
             .concat(commentApi.middleware)
             .concat(controlsApi.middleware)
+            .concat(ebookApi.middleware)
 })
 
 export type RootState = ReturnType<typeof store.getState>

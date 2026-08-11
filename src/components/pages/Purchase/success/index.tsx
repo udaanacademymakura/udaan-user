@@ -108,7 +108,9 @@ export default function PurchaseSuccess() {
                 }));
 
                 setTimeout(() => {
-                    navigate(type === "course" ? `/courses/${id}` : `/explore-test`);
+                    if (type === "course") navigate(PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(Number(id)));
+                    else if (type === "ebook") navigate(PATH.EBOOK.EXPLORE_EBOOK.VIEW_EBOOK.ROOT(Number(id)));
+                    else navigate(PATH.TEST.EXPLORE_TEST.ROOT);
                 }, 2000);
             } finally {
                 setVerifying(false);
@@ -273,9 +275,14 @@ export default function PurchaseSuccess() {
                         fullWidth
                         variant="contained"
                         size="large"
-                        onClick={() => navigate(type === "course" ? PATH.MY_COURSE.VIEW_COURSE.ROOT(Number(id)) : type === "test" ? PATH.TEST.ROOT : PATH.TEST.EXPLORE_TEST.BUNDLE_TEST.VIEW_BUNDLE.ROOT(Number(id)))}
+                        onClick={() => navigate(
+                            type === "course" ? PATH.MY_COURSE.VIEW_COURSE.ROOT(Number(id))
+                                : type === "test" ? PATH.TEST.ROOT
+                                    : type === "ebook" ? PATH.EBOOK.MY_EBOOK.VIEW_EBOOK.ROOT(Number(id))
+                                        : PATH.TEST.EXPLORE_TEST.BUNDLE_TEST.VIEW_BUNDLE.ROOT(Number(id))
+                        )}
                     >
-                        Start Learning
+                        {type === "ebook" ? "Read eBook" : "Start Learning"}
                     </Button>
                     <Button
                         fullWidth

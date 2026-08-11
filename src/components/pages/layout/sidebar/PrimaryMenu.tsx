@@ -14,7 +14,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { AudioSquare, Book, Bookmark, Document, Element4, Gift, I24Support, Notepad2, Notification, Paperclip, PenAdd, SearchNormal, VideoOctagon, VideoPlay } from "iconsax-reactjs";
+import { AudioSquare, Book, BookSaved, Bookmark, Document, Element4, Gift, I24Support, Notepad2, Notification, Paperclip, PenAdd, SearchNormal, VideoOctagon, VideoPlay } from "iconsax-reactjs";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -35,11 +35,15 @@ export default function PrimaryMenu({ isCollapsed = false }: PrimaryMenuProps) {
   const user = useAppSelector((state) => state.auth.user);
 
   const [openTest, setOpenTest] = useState(false);
+  const [openEbook, setOpenEbook] = useState(false);
   const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isCollapsed) setOpenTest(false);
+    if (isCollapsed) {
+      setOpenTest(false);
+      setOpenEbook(false);
+    }
   }, [isCollapsed]);
 
   const isActive = (path: string) =>
@@ -47,6 +51,9 @@ export default function PrimaryMenu({ isCollapsed = false }: PrimaryMenuProps) {
 
   const isTestManagementActive = () =>
     location.pathname.startsWith(PATH.TEST.ROOT);
+
+  const isEbookActive = () =>
+    location.pathname.startsWith(PATH.EBOOK.ROOT);
 
   const wrap = (label: string, children: React.ReactNode) =>
     isCollapsed ? (
@@ -322,6 +329,49 @@ export default function PrimaryMenu({ isCollapsed = false }: PrimaryMenuProps) {
               </ListItemButton>
             </ListItem>
           )}
+          {/* eBooks – collapsible sub-menu */}
+          {wrap(t("menus.ebook.root"),
+            <ListItem disablePadding className="menu__item" sx={{ flexDirection: "column", alignItems: "stretch" }}>
+              <ListItemButton
+                onClick={() => isCollapsed ? navigate(PATH.EBOOK.EXPLORE_EBOOK.ROOT) : setOpenEbook((prev) => !prev)}
+                className={isEbookActive() ? "active" : ""}
+                sx={{ justifyContent: isCollapsed ? "center" : undefined }}
+              >
+                <ListItemIcon sx={{ minWidth: isCollapsed ? "unset" : undefined, justifyContent: "center" }}>
+                  <BookSaved size={20} />
+                </ListItemIcon>
+                {!isCollapsed && (
+                  <>
+                    <ListItemText primary={t("menus.ebook.root")} />
+                    {openEbook ? <ExpandLess /> : <ExpandMore />}
+                  </>
+                )}
+              </ListItemButton>
+              {!isCollapsed && (
+                <Collapse in={openEbook} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding sx={{ pl: 3 }}>
+                    <ListItem disablePadding className="menu__item">
+                      <ListItemButton
+                        onClick={() => navigate(PATH.EBOOK.EXPLORE_EBOOK.ROOT)}
+                        className={location.pathname.startsWith(PATH.EBOOK.EXPLORE_EBOOK.ROOT) ? "active-nested" : ""}
+                      >
+                        <ListItemText primary={t("menus.ebook.explore")} />
+                      </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding className="menu__item">
+                      <ListItemButton
+                        onClick={() => navigate(PATH.EBOOK.MY_EBOOK.ROOT)}
+                        className={location.pathname.startsWith(PATH.EBOOK.MY_EBOOK.ROOT) ? "active-nested" : ""}
+                      >
+                        <ListItemText primary={t("menus.ebook.my_ebooks")} />
+                      </ListItemButton>
+                    </ListItem>
+                  </List>
+                </Collapse>
+              )}
+            </ListItem>
+          )}
+
           {wrap(t("messages.gorkhapatra"),
             <ListItem disablePadding className="menu__item">
               <ListItemButton

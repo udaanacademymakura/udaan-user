@@ -164,8 +164,18 @@
             "ticket_replies": {
                 "title": "No Replies Yet",
                 "description": "No replies for this ticket yet. Be the first to respond."
+            },
+            "ebook": {
+                "title": "No eBooks Found",
+                "description": "No eBooks are available right now. Please check back later."
+            },
+            "my_ebook": {
+                "title": "No eBooks Yet",
+                "description": "You have not purchased or been assigned any eBook yet. Explore eBooks to get started."
             }
-        }
+        },
+        "ebook": "eBook",
+        "ebooks": "eBooks"
     },
     "menus": {
         "dashboard": "Dashboard",
@@ -191,6 +201,11 @@
             "all_tickets": "All Tickets",
             "chats": "Chats",
             "ticket_types": "Ticket Types"
+        },
+        "ebook": {
+            "root": "eBooks",
+            "explore": "Explore eBooks",
+            "my_ebooks": "My eBooks"
         }
     },
     "actions": {

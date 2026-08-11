@@ -18,6 +18,11 @@ import SingleLiveClassRoot from "../components/pages/CourseManagement/course/sin
 import LiveClassRoot from "../components/pages/CourseManagement/liveClasses";
 import AllLiveClass from "../components/pages/CourseManagement/liveClasses/allLiveClass";
 import MyCourseRoot from "../components/pages/CourseManagement/myCourse";
+import EbookRoot from "../components/pages/EbookManagement";
+import ExploreEbook from "../components/pages/EbookManagement/exploreEbook";
+import SingleExploreEbook from "../components/pages/EbookManagement/exploreEbook/singleEbook";
+import MyEbooks from "../components/pages/EbookManagement/myEbook";
+import SingleMyEbook from "../components/pages/EbookManagement/myEbook/singleEbook";
 import GorkhapatraRoot from "../components/pages/Gorkhapatra";
 import AllGorkhapatras from "../components/pages/Gorkhapatra/AllGorkhapatra";
 import SingleGorkhapatraRoot from "../components/pages/Gorkhapatra/SingleGorkhapatra";
@@ -268,6 +273,17 @@ const router = createBrowserRouter([
             children: [
               { path: PATH.VIDEOS.ROOT, element: <CoursePlaylist /> },
               { path: PATH.VIDEOS.VIEW_PLAYLIST.ROOT(), element: <SinglePlaylist /> }
+            ]
+          },
+          {
+            element:
+              <EbookRoot />,
+            children: [
+              { path: PATH.EBOOK.ROOT, element: <Navigate to={PATH.EBOOK.EXPLORE_EBOOK.ROOT} replace /> },
+              { path: PATH.EBOOK.EXPLORE_EBOOK.ROOT, element: <ExploreEbook /> },
+              { path: PATH.EBOOK.EXPLORE_EBOOK.VIEW_EBOOK.ROOT(), element: <SingleExploreEbook /> },
+              { path: PATH.EBOOK.MY_EBOOK.ROOT, element: <MyEbooks /> },
+              { path: PATH.EBOOK.MY_EBOOK.VIEW_EBOOK.ROOT(), element: <SingleMyEbook /> },
             ]
           },
           {
