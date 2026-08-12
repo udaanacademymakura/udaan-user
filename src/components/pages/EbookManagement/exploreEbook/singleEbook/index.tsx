@@ -1,5 +1,5 @@
 import { Box, Button, Chip, Divider, Paper, Skeleton, Typography } from "@mui/material";
-import { DocumentText, Lock, ShoppingCart, UserEdit } from "iconsax-reactjs";
+import { Buildings, DocumentText, Lock, ShoppingCart, UserEdit } from "iconsax-reactjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -73,16 +73,30 @@ export default function SingleExploreEbook() {
                     <div className="lg:col-span-8">
                         <Typography variant="h3" fontWeight={700} className="mb-1!">{ebook?.title}</Typography>
 
-                        {ebook?.author ? (
-                            <Typography
-                                variant="subtitle1"
-                                color="primary"
-                                fontWeight={500}
-                                className="flex items-center gap-1.5 mb-3!"
-                            >
-                                <UserEdit size={18} variant="Bold" />
-                                {ebook.author}
-                            </Typography>
+                        {ebook?.author || ebook?.publisher ? (
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3">
+                                {ebook?.author ? (
+                                    <Typography
+                                        variant="subtitle1"
+                                        color="primary"
+                                        fontWeight={500}
+                                        className="flex items-center gap-1.5"
+                                    >
+                                        <UserEdit size={18} variant="Bold" />
+                                        {ebook.author}
+                                    </Typography>
+                                ) : null}
+                                {ebook?.publisher ? (
+                                    <Typography
+                                        variant="subtitle2"
+                                        color="text.middle"
+                                        className="flex items-center gap-1.5"
+                                    >
+                                        <Buildings size={16} />
+                                        {ebook.publisher}
+                                    </Typography>
+                                ) : null}
+                            </div>
                         ) : null}
 
                         <div className="flex flex-wrap gap-2 mb-4">

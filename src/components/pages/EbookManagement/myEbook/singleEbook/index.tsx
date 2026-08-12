@@ -1,5 +1,5 @@
 import { Box, Button, Chip, CircularProgress, Divider, Paper, Skeleton, Typography } from "@mui/material";
-import { CloudPlus, DocumentDownload, DocumentText, Lock, Trash, UserEdit, WifiSquare } from "iconsax-reactjs";
+import { Buildings, CloudPlus, DocumentDownload, DocumentText, Lock, Trash, UserEdit, WifiSquare } from "iconsax-reactjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -87,11 +87,21 @@ export default function SingleMyEbook() {
                 >
                     <div>
                         <Typography variant="h5" fontWeight={700} className="mb-1!">{ebook?.title}</Typography>
-                        {ebook?.author ? (
-                            <Typography variant="subtitle2" color="primary" fontWeight={500} className="flex items-center gap-1 mb-1!">
-                                <UserEdit size={14} variant="Bold" />
-                                {ebook.author}
-                            </Typography>
+                        {ebook?.author || ebook?.publisher ? (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+                                {ebook?.author ? (
+                                    <Typography variant="subtitle2" color="primary" fontWeight={500} className="flex items-center gap-1">
+                                        <UserEdit size={14} variant="Bold" />
+                                        {ebook.author}
+                                    </Typography>
+                                ) : null}
+                                {ebook?.publisher ? (
+                                    <Typography variant="caption" color="text.middle" className="flex items-center gap-1">
+                                        <Buildings size={14} />
+                                        {ebook.publisher}
+                                    </Typography>
+                                ) : null}
+                            </div>
                         ) : null}
                         <div className="flex flex-wrap items-center gap-2">
                             <div className="flex gap-1 items-center">

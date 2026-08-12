@@ -1,5 +1,5 @@
 import { Box, Button, Paper, Typography } from "@mui/material";
-import { ArrowRight, Book, Calendar, DocumentText, UserEdit } from "iconsax-reactjs";
+import { ArrowRight, Book, Buildings, Calendar, DocumentText, UserEdit } from "iconsax-reactjs";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { PATH } from "../../../routes/PATH";
@@ -178,10 +178,20 @@ export default function EbookCard({ data, placeholderIndex = -1, havePurchased }
                         {data.author}
                     </Typography>
                 ) : null}
+                {data?.publisher ? (
+                    <Typography
+                        variant="caption"
+                        color="text.middle"
+                        className="flex items-center gap-1 mt-1! line-clamp-1"
+                    >
+                        <Buildings size={14} />
+                        {data.publisher}
+                    </Typography>
+                ) : null}
                 <Typography
                     variant="caption"
                     color="text.middle"
-                    className="flex items-center gap-1 mt-1.5!"
+                    className="flex items-center gap-1 mt-1!"
                 >
                     <Calendar size={14} />
                     {t("messages.published_date")}: {formatDate(publishedDate)}

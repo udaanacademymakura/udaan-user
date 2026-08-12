@@ -1,5 +1,5 @@
 import { Box, Button, Divider, Typography, useTheme } from "@mui/material";
-import { UserEdit } from "iconsax-reactjs";
+import { Buildings, UserEdit } from "iconsax-reactjs";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../../../utils/dateFormat";
 
@@ -40,11 +40,21 @@ export default function CoursePaymentCard({ vat, isLoading, data }: Props) {
                     </Box> : ""}
                     <div className="content">
                         <Typography variant="h5" fontWeight={600} className="line-clamp-2 mb-1">{data?.name}</Typography>
-                        {data?.author ? (
-                            <Typography variant="subtitle2" color="primary" fontWeight={500} className="flex items-center gap-1 mb-1">
-                                <UserEdit size={14} variant="Bold" />
-                                {data.author}
-                            </Typography>
+                        {data?.author || data?.publisher ? (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+                                {data?.author ? (
+                                    <Typography variant="subtitle2" color="primary" fontWeight={500} className="flex items-center gap-1">
+                                        <UserEdit size={14} variant="Bold" />
+                                        {data.author}
+                                    </Typography>
+                                ) : null}
+                                {data?.publisher ? (
+                                    <Typography variant="caption" color="text.middle" className="flex items-center gap-1">
+                                        <Buildings size={14} />
+                                        {data.publisher}
+                                    </Typography>
+                                ) : null}
+                            </div>
                         ) : null}
                         <div className="flex items-center">
                             {data?.set_count ? <>

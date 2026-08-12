@@ -6,6 +6,7 @@ export interface EbookProps {
     id: number;
     title: string;
     author?: string;
+    publisher?: string;
     published_date?: string;
     description: string;
     is_downloadable: boolean;
