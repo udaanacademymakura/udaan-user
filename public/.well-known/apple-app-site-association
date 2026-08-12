@@ -3,11 +3,15 @@
     "apps": [],
     "details": [
       {
-        "appIDs": ["9GN95L2C9G.com.udaan.ios.Shaikshik.kendra"],
+        "appIDs": [
+          "9GN95L2C9G.com.udaan.ios.Shaikshik.kendra"
+        ],
         "components": [
           {
             "/": "*",
-            "?": { "no_app": "1" },
+            "?": {
+              "no_app": "1"
+            },
             "exclude": true,
             "comment": "Escape hatch: append ?no_app=1 to force any link to stay in the browser."
           },
@@ -16,37 +20,125 @@
             "exclude": true,
             "comment": "Live-class hand-off loaded in the app's own webview — must never open the app."
           },
-          { "/": "/auth/register*", "comment": "Signup funnel: /auth/register?redirect_link=gorkhapatra/14" },
-          { "/": "/gorkhapatra*", "comment": "Gorkhapatra listing and detail" },
-          { "/": "/course/*", "comment": "Course detail" },
-          { "/": "/courses*", "comment": "Course listing, course detail and course tests" },
-          { "/": "/home*", "comment": "Dashboard - explore tab" },
-          { "/": "/explore*", "comment": "Dashboard - explore tab" },
-          { "/": "/package*", "comment": "Dashboard - packages tab" },
-          { "/": "/my-learning*", "comment": "Dashboard - my learning tab" },
-          { "/": "/downloads*", "comment": "Offline downloads" },
-          { "/": "/offline*", "comment": "Offline downloads" },
-          { "/": "/test*", "comment": "Tests tab, test marketplace and test bundles" },
-          { "/": "/live-class*", "comment": "Dashboard - live classes tab" },
-          { "/": "/notice*", "comment": "Notice board and notice detail" },
-          { "/": "/discussion*", "comment": "Discussion listing and detail" },
-          { "/": "/support*", "comment": "Support tickets and ticket detail" },
-          { "/": "/daily-quiz*", "comment": "Daily quiz" },
-          { "/": "/free-material*", "comment": "Free materials" },
-          { "/": "/notification*", "comment": "Notifications" },
-          { "/": "/saved*", "comment": "Saved courses" },
-          { "/": "/search*", "comment": "Search" },
-          { "/": "/calendar*", "comment": "Calendar" },
-          { "/": "/profile*", "comment": "Profile" },
-          { "/": "/contact*", "comment": "Contact and support" },
-          { "/": "/about*", "comment": "About us" },
-          { "/": "/terms*", "comment": "Terms and conditions" },
-          { "/": "/privacy*", "comment": "Privacy policy" }
+          {
+            "/": "/auth/register*",
+            "comment": "Signup funnel: /auth/register?redirect_link=gorkhapatra/14"
+          },
+          {
+            "/": "/ebook*",
+            "comment": "Ebook listing"
+          },
+          {
+            "/": "/my-ebook*",
+            "comment": "Purchased ebooks"
+          },
+          {
+            "/": "/gorkhapatra*",
+            "comment": "Gorkhapatra listing and detail"
+          },
+          {
+            "/": "/course/*",
+            "comment": "Course detail"
+          },
+          {
+            "/": "/courses*",
+            "comment": "Course listing, course detail and course tests"
+          },
+          {
+            "/": "/home*",
+            "comment": "Dashboard - explore tab"
+          },
+          {
+            "/": "/explore*",
+            "comment": "Dashboard - explore tab"
+          },
+          {
+            "/": "/package*",
+            "comment": "Dashboard - packages tab"
+          },
+          {
+            "/": "/my-learning*",
+            "comment": "Dashboard - my learning tab"
+          },
+          {
+            "/": "/downloads*",
+            "comment": "Offline downloads"
+          },
+          {
+            "/": "/offline*",
+            "comment": "Offline downloads"
+          },
+          {
+            "/": "/test*",
+            "comment": "Tests tab, test marketplace and test bundles"
+          },
+          {
+            "/": "/live-class*",
+            "comment": "Dashboard - live classes tab"
+          },
+          {
+            "/": "/notice*",
+            "comment": "Notice board and notice detail"
+          },
+          {
+            "/": "/discussion*",
+            "comment": "Discussion listing and detail"
+          },
+          {
+            "/": "/support*",
+            "comment": "Support tickets and ticket detail"
+          },
+          {
+            "/": "/daily-quiz*",
+            "comment": "Daily quiz"
+          },
+          {
+            "/": "/free-material*",
+            "comment": "Free materials"
+          },
+          {
+            "/": "/notification*",
+            "comment": "Notifications"
+          },
+          {
+            "/": "/saved*",
+            "comment": "Saved courses"
+          },
+          {
+            "/": "/search*",
+            "comment": "Search"
+          },
+          {
+            "/": "/calendar*",
+            "comment": "Calendar"
+          },
+          {
+            "/": "/profile*",
+            "comment": "Profile"
+          },
+          {
+            "/": "/contact*",
+            "comment": "Contact and support"
+          },
+          {
+            "/": "/about*",
+            "comment": "About us"
+          },
+          {
+            "/": "/terms*",
+            "comment": "Terms and conditions"
+          },
+          {
+            "/": "/privacy*",
+            "comment": "Privacy policy"
+          }
         ]
       }
     ]
   },
   "webcredentials": {
-    "apps": ["9GN95L2C9G.com.udaan.ios.Shaikshik.kendra"]
+    "apps": [
+      "9GN95L2C9G.com.udaan.ios.Shaikshik.kendra"
+    ]
   }
 }
