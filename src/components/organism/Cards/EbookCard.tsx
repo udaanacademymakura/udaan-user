@@ -167,26 +167,30 @@ export default function EbookCard({ data, placeholderIndex = -1, havePurchased }
                 >
                     {data?.title}
                 </Typography>
-                {data?.author ? (
-                    <Typography
-                        variant="subtitle2"
-                        color="primary"
-                        fontWeight={500}
-                        className="flex items-center gap-1 mt-1! line-clamp-1"
-                    >
-                        <UserEdit size={14} variant="Bold" />
-                        {data.author}
-                    </Typography>
-                ) : null}
-                {data?.publisher ? (
-                    <Typography
-                        variant="caption"
-                        color="text.middle"
-                        className="flex items-center gap-1 mt-1! line-clamp-1"
-                    >
-                        <Buildings size={14} />
-                        {data.publisher}
-                    </Typography>
+                {data?.author || data?.publisher ? (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                        {data?.author ? (
+                            <Typography
+                                variant="subtitle2"
+                                color="primary"
+                                fontWeight={500}
+                                className="flex items-center gap-1 line-clamp-1"
+                            >
+                                <UserEdit size={14} variant="Bold" className="shrink-0" />
+                                {data.author}
+                            </Typography>
+                        ) : null}
+                        {data?.publisher ? (
+                            <Typography
+                                variant="caption"
+                                color="text.middle"
+                                className="flex items-center gap-1 line-clamp-1"
+                            >
+                                <Buildings size={14} className="shrink-0" />
+                                {data.publisher}
+                            </Typography>
+                        ) : null}
+                    </div>
                 ) : null}
                 <Typography
                     variant="caption"
