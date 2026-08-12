@@ -1,5 +1,5 @@
 import { Box, Button, Chip, CircularProgress, Divider, Paper, Skeleton, Typography } from "@mui/material";
-import { CloudPlus, DocumentDownload, DocumentText, Lock, Trash, WifiSquare } from "iconsax-reactjs";
+import { CloudPlus, DocumentDownload, DocumentText, Lock, Trash, UserEdit, WifiSquare } from "iconsax-reactjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -87,6 +87,12 @@ export default function SingleMyEbook() {
                 >
                     <div>
                         <Typography variant="h5" fontWeight={700} className="mb-1!">{ebook?.title}</Typography>
+                        {ebook?.author ? (
+                            <Typography variant="subtitle2" color="primary" fontWeight={500} className="flex items-center gap-1 mb-1!">
+                                <UserEdit size={14} variant="Bold" />
+                                {ebook.author}
+                            </Typography>
+                        ) : null}
                         <div className="flex flex-wrap items-center gap-2">
                             <div className="flex gap-1 items-center">
                                 <Box sx={{ color: (theme) => theme.palette.info.main }}>
@@ -104,7 +110,7 @@ export default function SingleMyEbook() {
                             ) : null}
                             <Divider orientation="vertical" className="h-3.5!" />
                             <Typography variant="caption" color="text.middle">
-                                {t("messages.published_date")}: {formatDate(ebook?.created_at || "")}
+                                {t("messages.published_date")}: {formatDate(ebook?.published_date || ebook?.created_at || "")}
                             </Typography>
                             {canDownload ? (
                                 isSavedOffline && (

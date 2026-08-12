@@ -1,5 +1,6 @@
 import { Box, Button, Chip, Divider, Paper, Skeleton, Typography } from "@mui/material";
-import { DocumentText, Lock, ShoppingCart } from "iconsax-reactjs";
+import { DocumentText, Lock, ShoppingCart, UserEdit } from "iconsax-reactjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { PATH } from "../../../../../routes/PATH";
@@ -14,6 +15,7 @@ export default function SingleExploreEbook() {
     const { id } = useParams();
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [showFullDescription, setShowFullDescription] = useState(false);
 
     const { data, isLoading } = useGetEbookByIdQuery({ id: Number(id) }, { skip: !id });
     const { data: related } = useGetRelatedEbooksQuery({ id: Number(id) }, { skip: !id });
@@ -21,6 +23,9 @@ export default function SingleExploreEbook() {
     const ebook = data?.data;
     const isFree = Number(ebook?.sale_price) <= 0;
     const relatedEbooks = related?.data || [];
+    const isLongDescription = (ebook?.description || "").replace(/<[^>]*>/g, "").trim().length > 320;
+    const hasDiscount =
+        Number(ebook?.discount) > 0 && Number(ebook?.marked_price) > Number(ebook?.sale_price);
 
     if (isLoading) {
         return (
@@ -66,7 +71,19 @@ export default function SingleExploreEbook() {
                     </div>
 
                     <div className="lg:col-span-8">
-                        <Typography variant="h3" fontWeight={700} className="mb-2!">{ebook?.title}</Typography>
+                        <Typography variant="h3" fontWeight={700} className="mb-1!">{ebook?.title}</Typography>
+
+                        {ebook?.author ? (
+                            <Typography
+                                variant="subtitle1"
+                                color="primary"
+                                fontWeight={500}
+                                className="flex items-center gap-1.5 mb-3!"
+                            >
+                                <UserEdit size={18} variant="Bold" />
+                                {ebook.author}
+                            </Typography>
+                        ) : null}
 
                         <div className="flex flex-wrap gap-2 mb-4">
                             {ebook?.mega_categories?.map((category) => (
@@ -94,9 +111,33 @@ export default function SingleExploreEbook() {
                             ) : null}
                             <Divider orientation="vertical" className="h-3.5!" />
                             <Typography variant="caption" color="text.middle">
-                                {t("messages.published_date")}: {formatDate(ebook?.created_at || "")}
+                                {t("messages.published_date")}: {formatDate(ebook?.published_date || ebook?.created_at || "")}
                             </Typography>
                         </div>
+
+                        {ebook?.description ? (
+                            <div className="description__wrapper mb-4">
+                                <Typography variant="h6" fontWeight={600} color="text.dark" className="mb-2!">
+                                    Description
+                                </Typography>
+                                <div
+                                    className={`general__content__box [&_p]:mt-0! ${showFullDescription ? "" : "line-clamp-6"}`}
+                                >
+                                    {renderHtml(ebook.description)}
+                                </div>
+                                {isLongDescription ? (
+                                    <Button
+                                        variant="text"
+                                        color="primary"
+                                        size="small"
+                                        className="px-0!"
+                                        onClick={() => setShowFullDescription((prev) => !prev)}
+                                    >
+                                        {showFullDescription ? "Show less" : "Read more"}
+                                    </Button>
+                                ) : null}
+                            </div>
+                        ) : null}
 
                         <Paper
                             className="p-4 rounded-md flex flex-wrap items-center justify-between gap-4"
@@ -111,13 +152,13 @@ export default function SingleExploreEbook() {
                                         <Typography variant="h4" color="primary" fontWeight={700}>
                                             {t("messages.npr")}{ebook?.sale_price}
                                         </Typography>
-                                        {ebook?.discount ? (
+                                        {hasDiscount ? (
                                             <>
                                                 <Typography variant="subtitle1" color="error" className="line-through">
                                                     {t("messages.npr")}{ebook?.marked_price}
                                                 </Typography>
                                                 <Typography variant="subtitle2" color="success.main" fontWeight={500}>
-                                                    {ebook.discount}{ebook.discount_type === "percentage" ? "%" : t("messages.npr")} {t("messages.off")}
+                                                    {ebook?.discount}{ebook?.discount_type === "percentage" ? "%" : t("messages.npr")} {t("messages.off")}
                                                 </Typography>
                                             </>
                                         ) : null}
@@ -148,10 +189,6 @@ export default function SingleExploreEbook() {
                         </Paper>
                     </div>
                 </div>
-
-                <Typography variant="h4" className="mt-8!" fontWeight={600}>Description</Typography>
-                <Divider className="mt-3! mb-4!" />
-                <div className="general__content__box">{renderHtml(ebook?.description || "")}</div>
 
                 {relatedEbooks.length > 0 && (
                     <>

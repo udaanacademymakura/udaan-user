@@ -1,4 +1,5 @@
 import { Box, Button, Divider, Typography, useTheme } from "@mui/material";
+import { UserEdit } from "iconsax-reactjs";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../../../utils/dateFormat";
 
@@ -39,12 +40,18 @@ export default function CoursePaymentCard({ vat, isLoading, data }: Props) {
                     </Box> : ""}
                     <div className="content">
                         <Typography variant="h5" fontWeight={600} className="line-clamp-2 mb-1">{data?.name}</Typography>
+                        {data?.author ? (
+                            <Typography variant="subtitle2" color="primary" fontWeight={500} className="flex items-center gap-1 mb-1">
+                                <UserEdit size={14} variant="Bold" />
+                                {data.author}
+                            </Typography>
+                        ) : null}
                         <div className="flex items-center">
                             {data?.set_count ? <>
                                 <Typography variant="caption" >{data?.set_count} Tests</Typography>
                                 <Divider orientation="vertical" className="mx-2! lg:mx-2! h-3.5!" />
                             </> : ""}
-                            <Typography variant="caption" color="text.dark">{t("messages.published_date")}: {formatDate(data?.created_at || "")}</Typography>
+                            <Typography variant="caption" color="text.dark">{t("messages.published_date")}: {formatDate(data?.published_date || data?.created_at || "")}</Typography>
                         </div>
                     </div>
                 </div>

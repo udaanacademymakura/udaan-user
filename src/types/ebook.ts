@@ -5,6 +5,8 @@ export type EbookDiscountType = "percentage" | "amount";
 export interface EbookProps {
     id: number;
     title: string;
+    author?: string;
+    published_date?: string;
     description: string;
     is_downloadable: boolean;
     price: string;

@@ -197,6 +197,48 @@ export default function PrimaryMenu({ isCollapsed = false }: PrimaryMenuProps) {
               </ListItemButton>
             </ListItem>
           )}
+          {/* eBooks – collapsible sub-menu */}
+          {wrap(t("menus.ebook.root"),
+            <ListItem disablePadding className="menu__item" sx={{ flexDirection: "column", alignItems: "stretch" }}>
+              <ListItemButton
+                onClick={() => isCollapsed ? navigate(PATH.EBOOK.EXPLORE_EBOOK.ROOT) : setOpenEbook((prev) => !prev)}
+                className={isEbookActive() ? "active" : ""}
+                sx={{ justifyContent: isCollapsed ? "center" : undefined }}
+              >
+                <ListItemIcon sx={{ minWidth: isCollapsed ? "unset" : undefined, justifyContent: "center" }}>
+                  <BookSaved size={20} />
+                </ListItemIcon>
+                {!isCollapsed && (
+                  <>
+                    <ListItemText primary={t("menus.ebook.root")} />
+                    {openEbook ? <ExpandLess /> : <ExpandMore />}
+                  </>
+                )}
+              </ListItemButton>
+              {!isCollapsed && (
+                <Collapse in={openEbook} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding sx={{ pl: 3 }}>
+                    <ListItem disablePadding className="menu__item">
+                      <ListItemButton
+                        onClick={() => navigate(PATH.EBOOK.EXPLORE_EBOOK.ROOT)}
+                        className={location.pathname.startsWith(PATH.EBOOK.EXPLORE_EBOOK.ROOT) ? "active-nested" : ""}
+                      >
+                        <ListItemText primary={t("menus.ebook.explore")} />
+                      </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding className="menu__item">
+                      <ListItemButton
+                        onClick={() => navigate(PATH.EBOOK.MY_EBOOK.ROOT)}
+                        className={location.pathname.startsWith(PATH.EBOOK.MY_EBOOK.ROOT) ? "active-nested" : ""}
+                      >
+                        <ListItemText primary={t("menus.ebook.my_ebooks")} />
+                      </ListItemButton>
+                    </ListItem>
+                  </List>
+                </Collapse>
+              )}
+            </ListItem>
+          )}
         </List>
 
         <SectionLabel label={t("messages.learning")} />
@@ -329,49 +371,6 @@ export default function PrimaryMenu({ isCollapsed = false }: PrimaryMenuProps) {
               </ListItemButton>
             </ListItem>
           )}
-          {/* eBooks – collapsible sub-menu */}
-          {wrap(t("menus.ebook.root"),
-            <ListItem disablePadding className="menu__item" sx={{ flexDirection: "column", alignItems: "stretch" }}>
-              <ListItemButton
-                onClick={() => isCollapsed ? navigate(PATH.EBOOK.EXPLORE_EBOOK.ROOT) : setOpenEbook((prev) => !prev)}
-                className={isEbookActive() ? "active" : ""}
-                sx={{ justifyContent: isCollapsed ? "center" : undefined }}
-              >
-                <ListItemIcon sx={{ minWidth: isCollapsed ? "unset" : undefined, justifyContent: "center" }}>
-                  <BookSaved size={20} />
-                </ListItemIcon>
-                {!isCollapsed && (
-                  <>
-                    <ListItemText primary={t("menus.ebook.root")} />
-                    {openEbook ? <ExpandLess /> : <ExpandMore />}
-                  </>
-                )}
-              </ListItemButton>
-              {!isCollapsed && (
-                <Collapse in={openEbook} timeout="auto" unmountOnExit>
-                  <List component="div" disablePadding sx={{ pl: 3 }}>
-                    <ListItem disablePadding className="menu__item">
-                      <ListItemButton
-                        onClick={() => navigate(PATH.EBOOK.EXPLORE_EBOOK.ROOT)}
-                        className={location.pathname.startsWith(PATH.EBOOK.EXPLORE_EBOOK.ROOT) ? "active-nested" : ""}
-                      >
-                        <ListItemText primary={t("menus.ebook.explore")} />
-                      </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding className="menu__item">
-                      <ListItemButton
-                        onClick={() => navigate(PATH.EBOOK.MY_EBOOK.ROOT)}
-                        className={location.pathname.startsWith(PATH.EBOOK.MY_EBOOK.ROOT) ? "active-nested" : ""}
-                      >
-                        <ListItemText primary={t("menus.ebook.my_ebooks")} />
-                      </ListItemButton>
-                    </ListItem>
-                  </List>
-                </Collapse>
-              )}
-            </ListItem>
-          )}
-
           {wrap(t("messages.gorkhapatra"),
             <ListItem disablePadding className="menu__item">
               <ListItemButton
