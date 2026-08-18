@@ -21,6 +21,7 @@ import {
 import { setCredentials } from "../../../slice/authSlice";
 import { showToast } from "../../../slice/toastSlice";
 import { useAppDispatch } from "../../../store/hook";
+import { parseDeviceConflict, readDeviceConflict } from "../../../utils/deviceConflict";
 import { usePendingRedirect, withRedirectLink } from "../../../utils/redirectLink";
 import NewDeviceDetectedDialog from "../Dialog/NewDeviceDetectedDialog";
 
@@ -87,6 +88,17 @@ export default function LoginForm() {
                         password: values.password,
                     }).unwrap();
 
+                    const blocked = readDeviceConflict(response.data);
+                    if (blocked) {
+                        setNewDeviceDialog({
+                            open: true,
+                            deviceLocation: blocked.deviceLocation,
+                            hasPendingRequest: blocked.hasPendingRequest,
+                            userId: blocked.userId,
+                        });
+                        return;
+                    }
+
                     dispatch(
                         setCredentials({
                             token: response.data.token,
@@ -96,12 +108,16 @@ export default function LoginForm() {
 
                     navigate(redirectLink || PATH.AUTH.INTEREST.ROOT, { replace: true });
                 } catch (e: any) {
-                    setNewDeviceDialog({
-                        open: e?.data?.data?.user_id ? true : false,
-                        deviceLocation: e?.data?.data?.device_location,
-                        hasPendingRequest: e?.data?.data?.has_pending_request,
-                        userId: e?.data?.data?.user_id,
-                    });
+                    const conflict = parseDeviceConflict(e);
+                    if (conflict) {
+                        setNewDeviceDialog({
+                            open: true,
+                            deviceLocation: conflict.deviceLocation,
+                            hasPendingRequest: conflict.hasPendingRequest,
+                            userId: conflict.userId,
+                        });
+                        return;
+                    }
                     dispatch(
                         showToast({
                             message: e?.data?.message || "Invalid credentials. Please try again.",

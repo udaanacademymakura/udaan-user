@@ -15,6 +15,7 @@ import { useResendOtpMutation, useVerifyOtpMutation } from "../../../../services
 import { setCredentials } from "../../../../slice/authSlice";
 import { showToast } from "../../../../slice/toastSlice";
 import { useAppDispatch, useAppSelector } from "../../../../store/hook";
+import { parseDeviceConflict, readDeviceConflict } from "../../../../utils/deviceConflict";
 import { usePendingRedirect } from "../../../../utils/redirectLink";
 import AuthHeader from "../../../molecules/AuthHeader";
 import NewDeviceDetectedDialog from "../../../organism/Dialog/NewDeviceDetectedDialog";
@@ -103,7 +104,16 @@ export default function VerifyOTP() {
             try {
                 const response = await verifyOtp({ phone, otp: values.otp }).unwrap();
 
-
+                const blocked = readDeviceConflict(response.data);
+                if (blocked) {
+                    setNewDeviceDialog({
+                        open: true,
+                        deviceLocation: blocked.deviceLocation,
+                        hasPendingRequest: blocked.hasPendingRequest,
+                        userId: blocked.userId,
+                    });
+                    return;
+                }
 
                 dispatch(showToast({
                     message: response.message || "OTP verified successfully.",
@@ -117,12 +127,16 @@ export default function VerifyOTP() {
 
                 navigate(redirectLink || PATH.AUTH.INTEREST.ROOT, { replace: true });
             } catch (e: any) {
-                setNewDeviceDialog({
-                    open: e?.data?.data?.user_id ? true : false,
-                    deviceLocation: e?.data?.data?.device_location,
-                    hasPendingRequest: e?.data?.data?.has_pending_request,
-                    userId: e?.data?.data?.user_id,
-                });
+                const conflict = parseDeviceConflict(e);
+                if (conflict) {
+                    setNewDeviceDialog({
+                        open: true,
+                        deviceLocation: conflict.deviceLocation,
+                        hasPendingRequest: conflict.hasPendingRequest,
+                        userId: conflict.userId,
+                    });
+                    return;
+                }
                 dispatch(showToast({
                     message: e?.data?.message || "Invalid OTP. Please try again.",
                     severity: "error",

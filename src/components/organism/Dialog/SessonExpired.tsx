@@ -8,6 +8,7 @@ import {
     Typography,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
+import { PATH } from "../../../routes/PATH";
 import { logout } from "../../../slice/authSlice";
 import { hideSessionExpired } from "../../../slice/sessionSlice";
 import type { RootState } from "../../../store/store";
@@ -24,15 +25,15 @@ const SessionExpiredPopup = () => {
         dispatch(logout());
         dispatch(hideSessionExpired());
         const url = id
-            ? `/auth/device-reset?user_id=${encodeURIComponent(id)}`
-            : "/auth/device-reset";
+            ? `${PATH.AUTH.DEVICE_RESET.ROOT}?user_id=${encodeURIComponent(id)}`
+            : PATH.AUTH.DEVICE_RESET.ROOT;
         window.location.href = url;
     };
 
     const handleSignInOther = () => {
         dispatch(logout());
         dispatch(hideSessionExpired());
-        window.location.href = "/auth/login";
+        window.location.href = PATH.AUTH.LOGIN.ROOT;
     };
 
     return (
@@ -66,8 +67,8 @@ const SessionExpiredPopup = () => {
                     </Typography>
 
                     <Typography variant="body2" color="text.secondary">
-                        Your account is currently active on another device. Only one web session
-                        is allowed per account at a time.
+                        Your account is currently active on another device. Only 1 mobile &amp; 1
+                        web session is allowed per account at a time.
                     </Typography>
 
                     <Typography variant="body2" color="text.secondary" className="mt-2!">
