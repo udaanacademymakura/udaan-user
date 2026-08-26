@@ -64,7 +64,6 @@ function toHex8(value: number): string {
 	return value.toString(16).padStart(8, "0");
 }
 
-// crypto.randomUUID is secure-context only, which excludes `vite --host` over plain http.
 function randomId(): string {
 	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
 		return crypto.randomUUID();
