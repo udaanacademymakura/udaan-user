@@ -16,6 +16,10 @@ export default defineConfig({
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
 
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store)[\\/]/.test(id)) {
+            return 'vendor-react';
+          }
+
           if (id.includes('@zoom/meetingsdk')) return 'vendor-zoom';
           if (id.includes('@ckeditor')) return 'vendor-ckeditor';
           if (id.includes('react-pdf') || id.includes('pdfjs-dist')) return 'vendor-pdf';
@@ -34,7 +38,6 @@ export default defineConfig({
           if (id.includes('@mui') || id.includes('@emotion')) return 'vendor-mui';
           if (id.includes('react-router')) return 'vendor-router';
           if (id.includes('@reduxjs') || id.includes('react-redux')) return 'vendor-redux';
-          if (id.includes('react-dom') || id.includes('scheduler')) return 'vendor-react';
         },
       },
     },
