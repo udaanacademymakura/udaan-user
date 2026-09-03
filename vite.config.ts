@@ -20,7 +20,6 @@ export default defineConfig({
             return 'vendor-react';
           }
 
-          if (id.includes('@zoom/meetingsdk')) return 'vendor-zoom';
           if (id.includes('@ckeditor')) return 'vendor-ckeditor';
           if (id.includes('react-pdf') || id.includes('pdfjs-dist')) return 'vendor-pdf';
           if (id.includes('apexcharts')) return 'vendor-charts';

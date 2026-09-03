@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zoom Meeting</title>
-    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/5.0.0/css/bootstrap.css" />
-    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/5.0.0/css/react-select.css" />
+    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/6.2.0/css/bootstrap.css" />
+    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/6.2.0/css/react-select.css" />
 </head>
 
 <body>
@@ -29,12 +29,12 @@
 
     <div id="zmmtg-root"></div>
 
-    <script src="https://source.zoom.us/5.0.0/lib/vendor/react.min.js"></script>
-    <script src="https://source.zoom.us/5.0.0/lib/vendor/react-dom.min.js"></script>
-    <script src="https://source.zoom.us/5.0.0/lib/vendor/redux.min.js"></script>
-    <script src="https://source.zoom.us/5.0.0/lib/vendor/redux-thunk.min.js"></script>
-    <script src="https://source.zoom.us/5.0.0/lib/vendor/lodash.min.js"></script>
-    <script src="https://source.zoom.us/zoom-meeting-5.0.0.min.js"></script>
+    <script src="https://source.zoom.us/6.2.0/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/6.2.0/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/6.2.0/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/6.2.0/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/6.2.0/lib/vendor/lodash.min.js"></script>
+    <script src="https://source.zoom.us/zoom-meeting-6.2.0.min.js"></script>
 
     <script>
         ZoomMtg.preLoadWasm();
@@ -51,6 +51,22 @@
             leaveUrl: urlParams.get('leave')
         };
 
+        const post = (payload) => {
+            try {
+                parent.postMessage(Object.assign({ type: 'udaan_zoom' }, payload), window.location.origin);
+            } catch (e) { }
+        };
+
+        const postFailure = (at, res) => {
+            console.error('Zoom ' + at + ' error:', res);
+            post({
+                stage: 'error',
+                at: at,
+                errorCode: (res && res.errorCode) || 0,
+                detail: (res && (res.result || res.reason || res.message)) || ''
+            });
+        };
+
         if (meetingConfig.mn && meetingConfig.sig) {
             ZoomMtg.init({
                 leaveUrl: meetingConfig.leaveUrl,
@@ -61,7 +77,7 @@
                 // isSupportChat: false,
                 audioPanelAlwaysOpen: false,
                 success: function () {
-                    try { parent.postMessage({ type: 'udaan_zoom', stage: 'audio_connecting' }, '*'); } catch (e) { }
+                    post({ stage: 'audio_connecting' });
                     const joinConfig = {
                         meetingNumber: meetingConfig.mn,
                         userName: meetingConfig.name,
@@ -72,7 +88,7 @@
                             ZoomMtg.mute({
                                 mute: true
                             });
-                            try { parent.postMessage({ type: 'udaan_zoom', stage: 'joined' }, '*'); } catch (e) { }
+                            post({ stage: 'joined' });
                             const style = document.createElement('style');
 
                             style.innerHTML = `
@@ -102,16 +118,18 @@
                             document.head.appendChild(style);
                         },
                         error: function (res) {
-                            console.log("Join meeting error:", res);
+                            postFailure('join', res);
                         }
                     };
 
                     ZoomMtg.join(joinConfig);
                 },
                 error: function (res) {
-                    console.log("Init error:", res);
+                    postFailure('init', res);
                 }
             });
+        } else {
+            postFailure('config', { message: 'Meeting number or signature missing.' });
         }
     </script>
 </body>

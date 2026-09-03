@@ -21,7 +21,6 @@
     "@reduxjs/toolkit": "^2.9.2",
     "@tailwindcss/postcss": "^4.1.16",
     "@tanstack/react-table": "^8.21.3",
-    "@zoom/meetingsdk": "^5.0.0",
     "apexcharts": "^5.3.6",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",

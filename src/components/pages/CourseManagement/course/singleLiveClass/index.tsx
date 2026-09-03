@@ -31,6 +31,16 @@ const PHASE_FAST_MS = 1_000;    // per step when signature came back quickly
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+// Zoom reports every transport-level refusal as code 1, including the server-side
+// block applied to Meeting SDK versions past their quarterly minimum.
+const describeZoomFailure = (errorCode: number, detail: string) => {
+    if (errorCode === 1) {
+        return "We couldn't reach Zoom's servers. This is usually a network or firewall restriction — try another network or turn off any VPN. If every class fails this way, please report it to support.";
+    }
+    const base = detail || "The class could not be joined.";
+    return errorCode ? `${base} (Zoom error ${errorCode})` : base;
+};
+
 export default function SingleLiveClassRoot() {
     const { courseId, liveId } = useParams();
     const navigate = useNavigate();
@@ -122,16 +132,14 @@ export default function SingleLiveClassRoot() {
                 // Phase 3 — about to request the signature
                 await advance(3);
 
-                const meetingNumber = meetingData.start_url.match(/\/j\/(\d+)/)?.[1];
-                const password = new URL(meetingData.start_url).searchParams.get("pwd");
-
-                const zoomAccount = zoomAccountsData?.data?.find(
-                    (acc) => acc.id === meetingData.account_id
-                );
-                const sdkKey = zoomAccount?.sdk_key;
+                const meetingSource = [meetingData.start_url, meetingData.join_url]
+                    .find((url) => url && /\/[js]\/\d+/.test(url));
+                const meetingNumber = meetingSource?.match(/\/[js]\/(\d+)/)?.[1];
+                const password = meetingSource
+                    ? new URL(meetingSource).searchParams.get("pwd")
+                    : null;
 
                 if (!meetingNumber) throw new Error("Invalid Meeting URL in server data.");
-                if (!sdkKey) throw new Error("Zoom SDK Key not found for this account.");
 
                 const sigRes = await generateSignature({
                     meeting_id: Number(meetingNumber),
@@ -141,6 +149,12 @@ export default function SingleLiveClassRoot() {
 
                 const signature = sigRes.data.signature;
                 if (!signature) throw new Error("Failed to generate meeting signature.");
+
+                // Prefer the key returned alongside the signature; the /zoom-accounts
+                // fallback exists only until that field ships.
+                const sdkKey = sigRes.data.sdk_key
+                    || zoomAccountsData?.data?.find((acc) => acc.id === meetingData.account_id)?.sdk_key;
+                if (!sdkKey) throw new Error("Zoom SDK Key not found for this account.");
 
                 // Construct URL for the static HTML file
                 const finalDestination = window.location.origin + PATH.COURSE_MANAGEMENT.COURSES.VIEW_COURSE.ROOT(Number(courseId));
@@ -187,6 +201,12 @@ export default function SingleLiveClassRoot() {
                 setJoinPhase((curr) => (curr < 5 ? 5 : curr));
             } else if (data.stage === "joined") {
                 setJoinPhase((curr) => (curr < 6 ? 6 : curr));
+            } else if (data.stage === "error") {
+                if (watchdogTimersRef.current.t5) clearTimeout(watchdogTimersRef.current.t5);
+                if (watchdogTimersRef.current.t6) clearTimeout(watchdogTimersRef.current.t6);
+                setMeetingStatus("error");
+                setError(describeZoomFailure(Number(data.errorCode) || 0, String(data.detail || "")));
+                setRetryCountdown(3);
             }
         };
 

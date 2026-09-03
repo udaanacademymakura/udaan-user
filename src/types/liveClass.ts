@@ -1,15 +1,10 @@
 import type { Pagination } from ".";
 
+// Deliberately narrower than the API response: the student portal must never
+// hold client_secret / sdk_secret, so they stay untyped and unreadable here.
 export interface ZoomAccount {
     id: number;
-    name: string;
-    is_active: boolean;
-    email: string;
-    account_id: string;
-    client_id: string;
-    client_secret: string;
     sdk_key: string;
-    sdk_secret: string;
 }
 
 export interface LiveClassProps {
