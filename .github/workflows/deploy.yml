@@ -47,14 +47,17 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
+      # Hashed chunks from the previous build stay for 14 days so tabs opened
+      # before this deploy can still resolve their lazy imports.
       - name: Deploy to server
+        env:
+          TARGET: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}
         run: |
-          rsync -avz --delete dist/ \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/udaan
-      - name: Deploy to server
-        run: |
-          rsync -avz --delete dist/ \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/udaan
+          rsync -avz --delete --exclude 'assets/' dist/ "$TARGET":/var/www/udaan/
+          rsync -avz dist/assets/ "$TARGET":/var/www/udaan/assets/
+          (cd dist/assets && find . -type f -printf '%P\n') > current-assets.txt
+          scp current-assets.txt "$TARGET":/tmp/udaan-current-assets.txt
+          ssh "$TARGET" 'cd /var/www/udaan/assets && while IFS= read -r f; do touch -c -- "$f"; done < /tmp/udaan-current-assets.txt && find . -type f -mtime +14 -delete'
 
       - name: Notify Slack on Success
         if: success()

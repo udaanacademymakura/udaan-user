@@ -1,13 +1,15 @@
-import { lazy, Suspense, type ComponentType } from "react";
+import { Suspense, type ComponentType } from "react";
 import { Box, CircularProgress } from "@mui/material";
-import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet, RouterProvider, type RouteObject } from "react-router-dom";
 
 import RootLayout from "./RootLayout";
 import Private from "./Private";
+import RouteErrorBoundary from "../components/organism/ErrorBoundary";
+import { lazyWithRetry } from "../utils/lazyRetry";
 import { PATH } from "./PATH";
 
 function lazyRoute(loader: () => Promise<{ default: ComponentType<any> }>) {
-  const Component = lazy(loader);
+  const Component = lazyWithRetry(loader);
   return (
     <Suspense fallback={<RouteFallback />}>
       <Component />
@@ -23,27 +25,27 @@ function RouteFallback() {
   );
 }
 
-const App = lazy(() => import("../App"));
+const App = lazyWithRetry(() => import("../App"));
 
-const AuthRoot = lazy(() => import("../components/pages/auth"));
-const AuthLayout = lazy(() => import("../components/pages/layout/AuthLayout"));
-const SingleFormAuthLayout = lazy(() => import("../components/pages/layout/SingleFormAuthLayout"));
-const NotFound = lazy(() => import("../components/pages/layout/NotFound"));
+const AuthRoot = lazyWithRetry(() => import("../components/pages/auth"));
+const AuthLayout = lazyWithRetry(() => import("../components/pages/layout/AuthLayout"));
+const SingleFormAuthLayout = lazyWithRetry(() => import("../components/pages/layout/SingleFormAuthLayout"));
+const NotFound = lazyWithRetry(() => import("../components/pages/layout/NotFound"));
 
-const CourseRoot = lazy(() => import("../components/pages/CourseManagement/course"));
-const TestManagementRoot = lazy(() => import("../components/pages/TestManagement"));
-const ExploreTestRoot = lazy(() => import("../components/pages/TestManagement/exploreTest"));
-const PurchaseRoot = lazy(() => import("../components/pages/Purchase"));
-const LiveClassRoot = lazy(() => import("../components/pages/CourseManagement/liveClasses"));
-const NotesRoot = lazy(() => import("../components/pages/MediaManagement/notes"));
-const VideosRoot = lazy(() => import("../components/pages/MediaManagement/videos"));
-const EbookRoot = lazy(() => import("../components/pages/EbookManagement"));
-const GorkhapatraRoot = lazy(() => import("../components/pages/Gorkhapatra"));
-const NoticeRoot = lazy(() => import("../components/pages/NoticeBoard/index."));
-const AudiosRoot = lazy(() => import("../components/pages/MediaManagement/audios"));
-const SettingRoot = lazy(() => import("../components/pages/Settings"));
-const DiscussionManagementRoot = lazy(() => import("../components/pages/DiscussionManagement"));
-const TicketManagementRoot = lazy(() => import("../components/pages/TicketManagement"));
+const CourseRoot = lazyWithRetry(() => import("../components/pages/CourseManagement/course"));
+const TestManagementRoot = lazyWithRetry(() => import("../components/pages/TestManagement"));
+const ExploreTestRoot = lazyWithRetry(() => import("../components/pages/TestManagement/exploreTest"));
+const PurchaseRoot = lazyWithRetry(() => import("../components/pages/Purchase"));
+const LiveClassRoot = lazyWithRetry(() => import("../components/pages/CourseManagement/liveClasses"));
+const NotesRoot = lazyWithRetry(() => import("../components/pages/MediaManagement/notes"));
+const VideosRoot = lazyWithRetry(() => import("../components/pages/MediaManagement/videos"));
+const EbookRoot = lazyWithRetry(() => import("../components/pages/EbookManagement"));
+const GorkhapatraRoot = lazyWithRetry(() => import("../components/pages/Gorkhapatra"));
+const NoticeRoot = lazyWithRetry(() => import("../components/pages/NoticeBoard/index."));
+const AudiosRoot = lazyWithRetry(() => import("../components/pages/MediaManagement/audios"));
+const SettingRoot = lazyWithRetry(() => import("../components/pages/Settings"));
+const DiscussionManagementRoot = lazyWithRetry(() => import("../components/pages/DiscussionManagement"));
+const TicketManagementRoot = lazyWithRetry(() => import("../components/pages/TicketManagement"));
 
 const wrap = (Element: ComponentType) => (
   <Suspense fallback={<RouteFallback />}>
@@ -51,7 +53,7 @@ const wrap = (Element: ComponentType) => (
   </Suspense>
 );
 
-const router = createBrowserRouter([
+const routes: RouteObject[] = [
   {
     path: PATH.AUTH.CHOOSE_PLATFORM.ROOT,
     element: lazyRoute(() => import("../components/pages/auth/choosePlatform")),
@@ -294,6 +296,14 @@ const router = createBrowserRouter([
   {
     path: "*",
     element: wrap(NotFound),
+  },
+];
+
+const router = createBrowserRouter([
+  {
+    element: <Outlet />,
+    errorElement: <RouteErrorBoundary />,
+    children: routes,
   },
 ]);
 

@@ -8,6 +8,7 @@ import { I18nextProvider, initReactI18next } from "react-i18next";
 import { Provider } from "react-redux";
 import "./App.css";
 import AppController from "./AppController.tsx";
+import AppErrorBoundary from "./components/organism/ErrorBoundary/AppErrorBoundary.tsx";
 import ReadingDialog from "./components/organism/Dialog/ReadingDialog.tsx";
 import SessionExpiredPopup from "./components/organism/Dialog/SessonExpired.tsx";
 import Toast from "./components/organism/Toast/index.tsx";
@@ -16,6 +17,7 @@ import GlobalRoutes from "./routes/Routes.tsx";
 import { store } from "./store/store.ts";
 import "./style.scss";
 import UdaanThemeProvider from "./ThemeProvider.tsx";
+import { installStaleChunkGuard } from "./utils/lazyRetry.ts";
 
 i18n
   .use(HttpApi)
@@ -38,22 +40,25 @@ i18n
     keySeparator: ".",
   });
 
+installStaleChunkGuard();
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
       <I18nextProvider i18n={i18n}>
         <UdaanThemeProvider>
-          <Suspense fallback={<Loading />}>
-
-            <GoogleOAuthProvider clientId='361289665406-npg48sokjoqcdepd1qov5dq4l6meipri.apps.googleusercontent.com'>
-              <AppController>
-                <GlobalRoutes />
-                <Toast />
-                <SessionExpiredPopup />
-                <ReadingDialog />
-              </AppController>
-            </GoogleOAuthProvider>
-          </Suspense>
+          <AppErrorBoundary>
+            <Suspense fallback={<Loading />}>
+              <GoogleOAuthProvider clientId='361289665406-npg48sokjoqcdepd1qov5dq4l6meipri.apps.googleusercontent.com'>
+                <AppController>
+                  <GlobalRoutes />
+                  <Toast />
+                  <SessionExpiredPopup />
+                  <ReadingDialog />
+                </AppController>
+              </GoogleOAuthProvider>
+            </Suspense>
+          </AppErrorBoundary>
         </UdaanThemeProvider>
       </I18nextProvider>
     </Provider>
