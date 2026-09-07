@@ -1,4 +1,5 @@
 import { Box, Button, Typography } from "@mui/material";
+import { useState } from "react";
 import { PATH } from "../../../routes/PATH";
 import { clearStaleChunkFlag } from "../../../utils/lazyRetry";
 
@@ -8,6 +9,9 @@ interface Props {
 }
 
 export default function ErrorScreen({ staleBuild, error }: Props) {
+    const [showDetails, setShowDetails] = useState(import.meta.env.DEV);
+    const message = error instanceof Error ? error.message : typeof error === "string" ? error : null;
+
     const goHome = () => {
         clearStaleChunkFlag();
         window.location.assign(PATH.DASHBOARD.ROOT);
@@ -29,10 +33,17 @@ export default function ErrorScreen({ staleBuild, error }: Props) {
                         ? "This page was updated while your tab was open. Reload to continue."
                         : "We could not load this page. Reloading usually fixes it."}
                 </Typography>
-                {import.meta.env.DEV && error instanceof Error ? (
-                    <Typography variant="body2" color="error.main" className="break-all">
-                        {error.message}
-                    </Typography>
+                {message ? (
+                    <Box className="flex flex-col items-center gap-2">
+                        <Button variant="text" size="small" color="inherit" onClick={() => setShowDetails((open) => !open)}>
+                            {showDetails ? "Hide details" : "Show details"}
+                        </Button>
+                        {showDetails ? (
+                            <Typography variant="body2" color="error.main" className="break-all">
+                                {message}
+                            </Typography>
+                        ) : null}
+                    </Box>
                 ) : null}
                 <Box className="flex gap-3 flex-wrap justify-center">
                     <Button variant="contained" color="primary" onClick={reload}>

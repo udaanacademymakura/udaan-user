@@ -14,9 +14,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('commonjsHelpers')) return 'vendor-react';
           if (!id.includes('node_modules')) return;
 
-          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store)[\\/]/.test(id)) {
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store|prop-types|react-is|object-assign)[\\/]/.test(id)) {
             return 'vendor-react';
           }
 
